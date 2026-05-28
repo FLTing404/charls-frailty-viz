@@ -1,0 +1,484 @@
+---
+title: "CHARLSFrailty"
+output: html_document
+date: "2026-03-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# Import the data
+#df_fral <- read_dta("/Users/jennyzhu/Desktop/1. Work/1. Social Economic/Sample Code/data/CHARLS.dta")
+#colnames(df_fral)
+df_fral <- read_dta("/Users/jennyzhu/Desktop/1. Work/1. Social Economic/Frailty构建论文/data and code/data and code/data/baseline/baseline CHARLS.dta")
+names(df_fral)[names(df_fral) == "ID"] <- "id"
+
+df_sd <- read_csv("/Users/jennyzhu/Desktop/1. Work/1. Social Economic/final_CHARLS.csv",show_col_types = FALSE)
+
+```
+
+```{r}
+#merge
+df1 <- merge(df_sd[df_sd$id %in% df_fral$id, ], df_fral[, c("id", "frailty")], by = "id", all.x = TRUE)
+#colnames(df1)
+#select required column
+vars <- c(
+"id", "wave",
+  
+"age","male",
+
+"housebirth","birthhukou","starv","starv2d","famfin","momdiedch","daddiedch",
+"padiedch","padivch","sibdiedch","pasmoke","pagambl","padrug","paarrest",
+"padepres","pasick","padeform","paabnorm","momhit2","dadhit2","pahit",
+"sibhit2","paquarrel2","dadhitmom2","momhitdad2","pahiteach","nnunsafe",
+"lonely2","nnbully2","schoolbully2","momnoaffect","momnowatch",
+
+"child","livpar","livpar_s","livpar_h","livsib","coresd","lvnear","lvalone",
+"hhres","pcnt","kcnt","chsee_1","chsee_2","chsee_3","chsee_4","chsee_5",
+"chsee_6","chsee_7","chsee_8","chsee_9","chsee_10","chcontact_1","chcontact_2",
+"chcontact_3","chcontact_4","chcontact_5","interact_f","majong_f","sport_f",
+"community_f","volunteer_f","sccare_f","course_f","stock_f","scinternet_f",
+"fpany","fcany","foany","fpamt","fcamt","foamt","finhelp","nonfinhelp",
+"guide","caresupport",
+
+"coresd","depresl","depresl_b",
+
+"sleep","nap","sleeprl",
+
+"frailty"
+)
+
+df_selected <- df1[, vars]
+#write.csv(df_selected, file = "待插补.csv")
+```
+
+```{r}
+#MI
+library(tidyverse)
+library(missRanger)
+
+# 看维度
+dim(df_selected)
+
+# 每列缺失比例
+miss_pct <- sort(colMeans(is.na(df_selected)), decreasing = TRUE)
+head(miss_pct, 30)
+
+# 看哪些列缺失 > 0
+miss_pct[miss_pct > 0]
+id_col <- "id"
+time_col <- "wave"
+outcome_col <- "frailty"
+# 1) 分类列先做众数插补（保持和 Python 一致）
+df2 <- df_selected %>% mutate(across(where(is.character), as.factor))
+
+cat_cols <- names(df2)[sapply(df2, is.factor) | sapply(df2, is.logical)]
+mode_impute_factor <- function(x){
+  if (!is.factor(x)) x <- as.factor(x)
+  if (all(is.na(x))) return(x)
+  tab <- table(x, useNA="no")
+  if (length(tab)==0) return(x)
+  m <- names(tab)[which.max(tab)]
+  x[is.na(x)] <- m
+  droplevels(x)
+}
+for (c in cat_cols) df2[[c]] <- mode_impute_factor(df2[[c]])
+
+# 2) 不插补 id/wave/frailty（但可以作为预测器）
+never <- intersect(c(id_col, time_col), names(df2))
+
+set.seed(1234)
+df_imp <- missRanger(
+  df2,
+  formula = as.formula(
+    paste0(". ~ . - ", paste(c(never, outcome_col), collapse = " - "))
+  ),
+  pmm.k = 5,
+  maxiter = 10,
+  num.trees = 200,
+  verbose = 1
+)
+
+# 3) 把不插补列覆盖回原值
+for (v in intersect(c(id_col, time_col, outcome_col), names(df_imp))) {
+  df_imp[[v]] <- df2[[v]]
+}
+
+write.csv(df_imp, file = "CHARLS插补完数据.csv")
+```
+
+```{r}
+# 每列缺失比例
+miss_pct <- sort(colMeans(is.na(df_imp)), decreasing = TRUE)
+head(miss_pct, 30)
+
+# 看哪些列缺失 > 0
+miss_pct[miss_pct > 0]
+```
+
+##重新从原数据构建frailty(2020)
+```{r}
+library(haven)
+library(dplyr)
+library(readxl)
+
+# Import the data
+df_dem <- read_dta("/Users/jennyzhu/Desktop/1. Work/1. Social Economic/2020/Demographic_Background.dta")
+df_hs <- read_dta("/Users/jennyzhu/Desktop/1. Work/1. Social Economic/2020/Health_Status_and_Functioning.dta")
+df_exit <- read_dta("/Users/jennyzhu/Desktop/1. Work/1. Social Economic/2020/Exit_Module.dta")
+
+```
+
+```{r}
+hs <- df_hs %>%
+  select(
+    ID, da003_1_, da003_3_, da003_6_, da003_8_, da003_4_,
+    da003_14_, da003_5_, da003_11_, da003_12_,
+    da001,
+    db001, db003, db005, db007, db009,
+    db014, db016, db022
+  )
+
+vars <- c(
+"da003_1_", "da003_3_", "da003_6_", "da003_8_", "da003_4_",
+"da003_14_", "da003_5_", "da003_11_", "da003_12_"
+)
+
+hs <- hs %>%
+  mutate(across(all_of(vars), ~ ifelse(. == 2, 0, .)))
+
+hs <- hs %>%
+  mutate(da001 = case_when(
+    da001 %in% c(1,2,3) ~ 0,
+    da001 %in% c(4,5) ~ 1,
+    TRUE ~ NA_real_
+  ))
+
+vars <- c(
+"db001", "db003", "db005", "db007", "db009",
+"db014", "db016", "db022"
+)
+
+hs <- hs %>%
+  mutate(across(all_of(vars),
+                ~ case_when(
+                  . %in% c(1,2) ~ 0,
+                  . %in% c(3,4) ~ 1,
+                  TRUE ~ NA_real_
+                )))
+```
+
+```{r}
+ex <- df_exit %>%
+  select(
+    ID,exdb025
+  )
+ex <- ex %>%
+  mutate(exdb025 = case_when(
+    exdb025 %in% c(1,2) ~ 0,
+    exdb025 %in% c(3,4) ~ 1,
+    TRUE ~ NA_real_
+  ))
+```
+
+```{r}
+cog <- read_excel("/Users/jennyzhu/Desktop/1. Work/1. Social Economic/2020认知抑郁.xlsx")
+
+cog <- cog %>%
+  rename(
+    id              = ID,
+    immediate       = `即时单词记忆2020`,
+    delayed         = `延时单词记忆2020`,
+    serial7         = `100减去7实验2020`,
+    year_           = `年2020`,
+    season          = `季节2020`,
+    day_            = `日2020`,
+    weekday         = `星期几2020`,
+    month_          = `月2020`,
+    figure          = `画图2020`
+  )
+
+cog <- cog %>%
+  mutate(
+    across(c(immediate, delayed, serial7, 
+             year_, season, day_, weekday, month_, figure),
+           as.numeric),
+    
+    date_naming = year_ + season + day_ + weekday + month_,
+    total       = immediate + delayed + serial7 + date_naming + figure,
+    cognition   = ifelse(
+      total == 0 | is.na(total),
+      NA_real_,
+      (total - (immediate + delayed + date_naming)) / total
+    )
+  )
+
+cog <- cog%>%
+  select("id", "cognition")%>%
+  rename("ID"="id")
+
+df_merged <- hs %>%
+#  full_join(ex, by = "ID") %>%
+  full_join(cog, by = "ID")
+
+#write.csv(df_merged, file = "df.csv")
+
+```
+
+
+#FI calc
+```{r}
+# ── 变量说明（所有变量已预编码为0/1，1=存在缺陷）──────────────────────────
+# 慢性病（da003_*）：1=患有该病
+#   da003_1_  高血压
+#   da003_3_  糖尿病
+#   da003_4_  癌症
+#   da003_5_  肺部疾病
+#   da003_6_  心脏病
+#   da003_8_  关节炎/风湿
+#   da003_11_ 肾脏疾病
+#   da003_12_ 胃肠疾病
+#   da003_14_ 精神/记忆相关疾病
+#
+# 自评健康（da001）：1=差/不好（deficit）
+#
+# ADL功能障碍（db001~db009）：1=有困难（deficit）
+#   db001 穿衣  db003 洗澡  db005 进食  db007 上下床  db009 如厕
+#
+# IADL功能障碍（db014~db022）：1=有困难（deficit）
+#   db014 做家务  db016 做饭  db022 购物
+#
+# 体力活动（exdb025）：1=不运动/静态生活（deficit）
+#
+# 认知功能（cognition）：连续变量0~1，值越高认知越差
+
+# ── 构建 Frailty Index ────────────────────────────────────────────────────
+
+# 定义所有deficit项目
+chronic_vars <- c("da003_1_", "da003_3_", "da003_6_", "da003_8_",
+                  "da003_4_", "da003_14_", "da003_5_", "da003_11_", "da003_12_")
+
+adl_vars  <- c("db001", "db003", "db005", "db007", "db009")
+iadl_vars <- c("db014", "db016", "db022")
+
+all_binary_vars <- c(chronic_vars, "da001", adl_vars, iadl_vars, "exdb025")
+# 共19个二值变量 + 1个连续认知变量 = 20项
+
+df <- df_merged %>%
+  mutate(
+    across(all_of(c(all_binary_vars, "cognition")), as.numeric),
+    
+    # 计算有效项目数（分母随缺失值动态调整）
+    n_valid = rowSums(!is.na(select(., all_of(all_binary_vars)))) +
+              as.numeric(!is.na(cognition)),
+    
+    # 计算deficit总分（NA自动跳过）
+    deficit_sum = rowSums(select(., all_of(all_binary_vars)), na.rm = TRUE) +
+                  ifelse(is.na(cognition), 0, cognition),
+    
+    # FI = 总缺陷 / 有效项目数（至少需要非NA项目数≥0.7×20=14项）
+    FI = ifelse(n_valid >= 14, deficit_sum / n_valid, NA_real_),
+    
+    # 二值化：FI≥0.25定义为frail（论文标准）
+    frailty = case_when(
+      is.na(FI)  ~ NA_real_,
+      FI >= 0.25 ~ 1,
+      TRUE       ~ 0
+    )
+  )
+
+# ── 检查结果 ─────────────────────────────────────────────────────────────
+summary(df$FI)
+table(df$frailty, useNA = "ifany")
+prop.table(table(df$frailty, useNA = "no"))  # frail比例
+```
+
+
+##从原数据构建frailty(2018)
+
+```{r}
+library(haven)
+library(dplyr)
+library(readxl)
+
+# Import the data
+df_hmn<- read_dta("/Users/jennyzhu/Desktop/1. Work/1. Social Economic/H_CHARLS_D_Data.dta")
+df_2018 <- read_dta("/Users/jennyzhu/Desktop/1. Work/1. Social Economic/2018/Health_Status_and_Functioning.dta")
+
+```
+
+```{r}
+hs <- df_hmn %>%
+  select(
+    ID, r4hibpe,r4diabe,r4hearte,r4stroke,r4cancre,r4arthre,r4lunge,r4psyche,r4memrye,r4shlta,
+    
+    r4dressa,r4batha,r4eata,r4beda,r4toilta,r4mealsa,r4shopa,r4moneya,r4medsa,
+    
+    r4walk1kma,r4chaira,r4climsa,r4stoopa,r4armsa,r4lifta,r4dimea
+  )
+
+hs <- hs %>%
+  mutate(r4shlta = case_when(
+    r4shlta %in% c(1,2,3) ~ 0,
+    r4shlta %in% c(4,5) ~ 1,
+    TRUE ~ NA_real_
+  ))
+
+df_2018 <- df_2018 %>%
+  select(ID,da005_3_, da005_4_)
+vars <- c("da005_3_", "da005_4_")
+df_2018 <- df_2018 %>%
+  mutate(across(all_of(vars), ~ ifelse(. == 2, 0, .)))
+
+cog <- read_excel("/Users/jennyzhu/Desktop/1. Work/1. Social Economic/2018认知抑郁.xlsx")
+
+cog <- cog %>%
+  rename(
+    id              = ID,
+    immediate       = `即时单词记忆2018`,
+    delayed         = `延时单词记忆2018`,
+    serial7         = `100减去7实验2018`,
+    year_           = `年2018`,
+    season          = `季节2018`,
+    day_            = `日2018`,
+    weekday         = `星期几2018`,
+    month_          = `月2018`,
+    figure          = `画图2018`
+  )
+
+cog <- cog %>%
+  mutate(
+    # 第一步：转为numeric（字符串"NA"自动变成真正的NA）
+    across(c(immediate, delayed, serial7,
+             year_, season, day_, weekday, month_, figure),
+           as.numeric),
+
+    # 第二步：单项NA替换为0（视作该题得0分）
+    # 但先记录哪些人是全部NA（代理访谈）
+    n_valid = rowSums(!is.na(select(., immediate, delayed, serial7,
+                                     year_, season, day_, weekday, month_, figure))),
+
+    across(c(immediate, delayed, serial7,
+             year_, season, day_, weekday, month_, figure),
+           ~ replace_na(., 0)),
+
+    # 第三步：计算各分项
+    date_naming = year_ + season + day_ + weekday + month_,
+    total       = immediate + delayed + serial7 + date_naming + figure,
+
+    # 第四步：公式不变，但全部NA的人（n_valid==0）或total==0设为NA
+    cognition = ifelse(
+      n_valid == 0 | total == 0,
+      NA_real_,
+      (total - (immediate + delayed + date_naming)) / total
+    )
+  ) %>%
+  select(id, cognition) %>%
+  rename(ID = id)
+
+
+#merge
+df_merged <- hs %>%
+  full_join(df_2018, by = "ID") %>%
+  full_join(cog, by = "ID")
+
+write.csv(df_merged, file = "df.csv")
+```
+
+#Frailty calc
+```{r}
+# ── 变量定义（根据实际列名）──────────────────────────────────────────────
+# 慢性病（9项）
+chronic_vars <- c("r4hibpe",   # 高血压
+                  "r4diabe",   # 糖尿病
+                  "r4hearte",  # 心脏病
+                  "r4stroke",  # 中风
+                  "r4cancre",  # 癌症
+                  "r4arthre",  # 关节炎/风湿
+                  "r4lunge",   # 肺部疾病
+                  "r4psyche",  # 精神疾病
+                  "r4memrye")  # 记忆相关疾病
+ 
+# 自评健康（1项）
+srh_vars <- c("r4shlta")
+ 
+# ADL 日常活动能力（5项）
+adl_vars <- c("r4dressa",   # 穿衣
+              "r4batha",    # 洗澡
+              "r4eata",     # 进食
+              "r4beda",     # 上下床
+              "r4toilta")   # 如厕
+ 
+# IADL 工具性日常活动能力（4项）
+iadl_vars <- c("r4mealsa",  # 做饭
+               "r4shopa",   # 购物
+               "r4moneya",  # 管钱
+               "r4medsa")   # 管药
+ 
+# 体能功能（7项）
+physical_vars <- c("r4walk1kma",  # 步行1km
+                   "r4chaira",    # 从椅子起来
+                   "r4climsa",    # 爬楼梯
+                   "r4stoopa",    # 弯腰/蹲下
+                   "r4armsa",     # 手臂上举
+                   "r4lifta",     # 举重物
+                   "r4dimea")     # 捡硬币/精细动作
+ 
+# 其他（2项）
+other_vars <- c("da005_3_",  # 视力相关或其他
+                "da005_4_")  # 视力相关或其他
+ 
+# 所有二值变量（共28项）
+all_binary_vars <- c(chronic_vars, srh_vars, adl_vars, iadl_vars, 
+                     physical_vars, other_vars)
+ 
+# 认知（1项连续变量，已在0~1之间，值越高认知越差）
+# 共 28 + 1 = 29 项，70%阈值 = floor(29*0.7) = 20 项
+ 
+# ── 逐行逐变量计算（NA则分子分母均不纳入）────────────────────────────────
+df <- df_merged %>%
+  mutate(across(all_of(c(all_binary_vars, "cognition")), as.numeric),
+         cognition = pmin(pmax(cognition, 0), 1)) %>%
+  rowwise() %>%
+  mutate(
+    # 分母：仅统计非NA的项目数
+    n_valid = sum(!is.na(c_across(all_of(all_binary_vars)))) +
+              as.integer(!is.na(cognition)),
+    
+    # 分子：仅累加非NA项目的deficit值
+    deficit_sum = sum(c_across(all_of(all_binary_vars)), na.rm = TRUE) +
+                  ifelse(is.na(cognition), 0, cognition),
+    
+    # FI = 分子 / 分母（NA项在两者中均被跳过）
+    FI = ifelse(n_valid > 0, deficit_sum / n_valid, NA_real_),
+    
+    # 三分类
+    frailty_cat = case_when(
+      is.na(FI)  ~ NA_character_,
+      FI >= 0.25 ~ "frail",
+      FI >= 0.10 ~ "pre-frail",
+      TRUE       ~ "robust"
+    ),
+    
+    # 二值
+    frailty = case_when(
+      is.na(FI)  ~ NA_real_,
+      FI >= 0.25 ~ 1,
+      TRUE       ~ 0
+    )
+  ) %>%
+  ungroup()
+
+# ── 检查结果 ──────────────────────────────────────────────────────────────
+summary(df$FI)
+table(df$frailty_cat, useNA = "ifany")
+prop.table(table(df$frailty_cat, useNA = "no"))
+
+
+write.csv(df, file = "charls_frailty_2018.csv")
+ 
+```
+

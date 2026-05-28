@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgeVital · Visual Analysis of Frailty in Aging China</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,800;0,900;1,700;1,800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="./vendor/echarts.min.js"></script>
+  <script src="./vendor/d3.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 1 · ONE-YEAR SNAPSHOT  (~100vh)                              -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="screen screen-a">
+
+  <header class="top-strip">
+    <div class="types-box">
+      <h3 class="strip-title">Types of Frailty</h3>
+      <p class="strip-desc"><strong>FI ∈ [0,1]</strong> ·
+        <span class="cat-pill robust">Robust</span>
+        <span class="cat-pill prefrail">Pre-Frail</span>
+        <span class="cat-pill frail">Frail</span></p>
+      <div class="fi-bar"><span class="seg robust"></span><span class="seg prefrail"></span><span class="seg frail"></span></div>
+    </div>
+    <div class="strip-stat">
+      <div class="strip-num" id="t_total">—</div>
+      <div class="strip-lbl">observations (4 waves)</div>
+    </div>
+    <div class="strip-stat">
+      <div class="strip-num" id="t_tracked">—</div>
+      <div class="strip-lbl">tracked cohort</div>
+    </div>
+    <div class="strip-stat">
+      <div class="strip-num" id="t_frail">—</div>
+      <div class="strip-lbl">Frail · 2018</div>
+    </div>
+    <div class="strip-stat">
+      <div class="strip-num small" id="t_prefrail">—</div>
+      <div class="strip-lbl">Pre-Frail · 2018</div>
+    </div>
+    <div class="strip-map"><div id="strip-mini-map" class="mini-map"></div></div>
+  </header>
+
+  <div class="hero-row">
+    <h1>Data visualization <span class="hl">of Frailty</span></h1>
+    <div class="hero-meta">
+      <span>AgeVital · CHARLS 2011–2018</span>
+      <div class="year-slider">
+        <label>Wave</label>
+        <button class="yr" data-y="2011">2011</button>
+        <button class="yr" data-y="2013">2013</button>
+        <button class="yr" data-y="2015">2015</button>
+        <button class="yr active" data-y="2018">2018</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="poster-grid">
+
+    <!-- LEFT -->
+    <aside class="poster-col col-l">
+      <div class="block">
+        <h2 class="block-title">Frailty Basic Data</h2>
+        <div class="bigdata-grid">
+          <div class="bigdata-cell"><div class="bigdata-num" id="kpi_total">—</div><div class="bigdata-lbl">sample</div></div>
+          <div class="bigdata-cell"><div class="bigdata-num" id="kpi_frail">—</div><div class="bigdata-lbl">Frail rate</div></div>
+          <div class="bigdata-cell"><div class="bigdata-num" id="kpi_fi">—</div><div class="bigdata-lbl">mean FI</div></div>
+          <div class="bigdata-cell"><div class="bigdata-num">3/5</div><div class="bigdata-lbl">≥1 chronic dz.</div></div>
+        </div>
+      </div>
+      <div class="block">
+        <h2 class="block-title">Comprehensive Deficit Rate</h2>
+        <div id="compliance-grid" class="compliance-row"></div>
+      </div>
+      <div class="block">
+        <h2 class="block-title">Daily Management</h2>
+        <div class="adl-icon-row" id="adl-icons"></div>
+        <div id="chart-adl" class="chart chart-adl"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER -->
+    <section class="poster-col col-c">
+      <div class="block map-block flex-1">
+        <h2 class="block-title">China Frailty Map</h2>
+        <div id="chart-china" class="chart chart-map"></div>
+        
+        <div class="map-footer">
+          <div class="mini-block">
+            <h2 class="block-title sm">Frail Rate by Region</h2>
+            <div id="globes-row" class="globes-row"></div>
+          </div>
+          <div class="mini-block">
+            <h2 class="block-title sm">Status by Region (R/P/F)</h2>
+            <div id="smm-row" class="smm-row"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT -->
+    <aside class="poster-col col-r">
+      <div class="block">
+        <h2 class="block-title">Frailty Classic Symptom</h2>
+        <div class="symp-strip">
+          <div class="symp"><div class="symp-icon">⚡</div><div class="symp-lbl">Weakness</div></div>
+          <div class="symp"><div class="symp-icon">😴</div><div class="symp-lbl">Fatigue</div></div>
+          <div class="symp"><div class="symp-icon">⚖️</div><div class="symp-lbl">Weight Loss</div></div>
+          <div class="symp"><div class="symp-icon">🐢</div><div class="symp-lbl">Slow Gait</div></div>
+          <div class="symp"><div class="symp-icon">🛋️</div><div class="symp-lbl">Low Activity</div></div>
+        </div>
+      </div>
+      <div class="block body-block flex-1">
+        <h2 class="block-title">Risk &amp; Further Complication</h2>
+        <p class="block-desc tiny">Wave <strong id="body-year-lbl">2018</strong> · click organ</p>
+        <div id="body-svg" class="body-wrap"></div>
+      </div>
+      <div class="block">
+        <h2 class="block-title">Effects of Lifestyle Factors</h2>
+        <div id="syringe" class="syringe-wrap"></div>
+      </div>
+    </aside>
+
+  </main>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 2 · MULTI-YEAR TRENDS  (~100vh)                              -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="screen screen-b">
+
+  <div class="hero-row part-b-head">
+    <div>
+      <span class="banner-tag">Part B</span>
+      <h2 class="banner-title">Multi-Year Trends (2011 → 2018)</h2>
+    </div>
+    <div class="banner-legend">
+      <span class="cat-pill robust">Robust</span>
+      <span class="cat-pill prefrail">Pre-Frail</span>
+      <span class="cat-pill frail">Frail</span>
+      <span class="cat-pill na">NA</span>
+    </div>
+  </div>
+
+  <div class="trends-poster">
+    <div class="block">
+      <h2 class="block-title">Projected Growth Rate</h2>
+      <div id="chart-growth" class="chart chart-trend-sm"></div>
+    </div>
+    <div class="block">
+      <h2 class="block-title">FI Severity Cohorts</h2>
+      <div id="chart-cohort" class="chart chart-trend-sm"></div>
+    </div>
+    <div class="block span-full">
+      <h2 class="block-title">Frailty State Transitions · Sankey (n = <span id="cohort-n">—</span>)</h2>
+      <div id="chart-sankey" class="chart chart-sankey"></div>
+    </div>
+    <div class="block">
+      <h2 class="block-title">FI by Region · Box Plot</h2>
+      <div id="chart-box" class="chart chart-trend-md"></div>
+    </div>
+    <div class="block">
+      <h2 class="block-title">FI Distribution Drift · Ridgeline</h2>
+      <div id="chart-ridge" class="chart chart-trend-md"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span>© AgeVital · ZJU · Data Visualization · 2026</span>
+    <span>CHARLS · PKU · Academic license</span>
+  </footer>
+</section>
+
+<div id="ttip" class="ttip"></div>
+<script src="app.js"></script>
+</body>
+</html>
