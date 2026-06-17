@@ -1,5 +1,4 @@
 export type Wave = 2011 | 2013 | 2015 | 2018
-export type FrailtyState = 'robust' | 'pre-frail' | 'frail' | 'death' | 'lost'
 
 export type SankeyLayerType = 'factor' | 'baseline' | 'evolution' | 'outcome'
 
@@ -33,36 +32,6 @@ export interface SankeyData {
   }
 }
 
-export interface AnomalyPath {
-  id: string
-  kind: 'jump' | 'recovery'
-  path: string[]
-  share: number
-  value: number
-  description: string
-}
-
-export interface TrendPoint {
-  year: Wave
-  robust: number
-  preFrail: number
-  frail: number
-  total: number
-  frailRate: number
-}
-
-export interface KpiPayload {
-  year: Wave
-  status: FrailtyState | 'all'
-  n: number
-  frailRate: number
-  preFrailRate: number
-  meanFI: number
-  meanAge?: number
-  femaleRate?: number
-  ruralRate?: number
-}
-
 export interface ProvinceDatum {
   province: string
   code: string
@@ -74,74 +43,6 @@ export interface ProvinceDatum {
   robustRate: number
   malePct: number | null
   urbanPct: number | null
-}
-
-export interface BodyDomain {
-  domain: 'brain' | 'heart' | 'lung' | 'joint' | 'muscle' | 'metabolic' | 'vision'
-  label: string
-  prevalence: number
-  meanFI: number
-}
-
-export interface IsotypeRow {
-  group: string
-  rate: number
-  label?: string
-}
-
-export interface DonutSlice {
-  name: string
-  value: number
-  detail?: string
-}
-
-export interface BoxStripPoint {
-  id: string
-  region: 'East' | 'Central' | 'West'
-  fi: number
-  age?: number
-  gender?: 'male' | 'female'
-  rural?: 0 | 1
-}
-
-export interface BoxStripPayload {
-  stats: {
-    region: string
-    min: number
-    q1: number
-    median: number
-    q3: number
-    max: number
-    n: number
-  }[]
-  points: BoxStripPoint[]
-}
-
-export interface FactorMatrixCell {
-  factor: string
-  rho: number
-  pvalue: number
-  category: 'SES' | 'Sleep' | 'Mood' | 'ACE' | 'Social'
-}
-
-export interface EmpathyVignette {
-  domain: BodyDomain['domain']
-  text: string
-  protagonist?: string
-}
-
-export interface ClassicSymptom {
-  key: 'fatigue' | 'fall' | 'weight_loss' | 'adl'
-  label: string
-  prevalence: number
-  desc: string
-}
-
-export interface SmallMultipleRegion {
-  region: 'East' | 'Central' | 'West' | 'NorthEast'
-  n: number
-  frailN: number
-  frailRate: number
 }
 
 export interface DeficitNetworkNode {
@@ -168,13 +69,24 @@ export interface DeficitNetworkPayload {
 }
 
 export type CohortRow = number[]
+
 export interface CohortTable {
   fields: string[]
   rows: CohortRow[]
   n: number
 }
 
-export type DriverDimension = 'ace' | 'sleep' | 'social' | 'depression' | 'fi' | 'ses' | 'healthcare' | 'activity' | 'scap' | 'material'
+export type DriverDimension =
+  | 'ace'
+  | 'sleep'
+  | 'social'
+  | 'depression'
+  | 'fi'
+  | 'ses'
+  | 'healthcare'
+  | 'activity'
+  | 'scap'
+  | 'material'
 
 export interface CorrelationMatrixPayload {
   labels: string[]

@@ -58,12 +58,15 @@ export function TrajectoriesPage() {
   const [sankey, setSankey] = useState<DriverSankeyPayload | null>(null)
   const [chord, setChord] = useState<DriverChordPayload | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Increment on year change to remount charts that need hard reset (parallel coords brush state)
+  const [chartKey, setChartKey] = useState(0)
 
   useEffect(() => {
     let aborted = false
     resetBrush()
     setTrajectory({ focusDimension: null })
     setError(null)
+    setChartKey((k) => k + 1)
 
     Promise.all([
       loadProvinces(year),
@@ -163,22 +166,26 @@ export function TrajectoriesPage() {
         </div>
       )}
 
-      {/* Province filter badge */}
-      {province && (
-        <div className="mb-1 flex items-center gap-2">
-          <span className="text-[10px] text-ink-stone">当前范围：</span>
-          <span className="rounded-[2px] border border-cinnabar/40 bg-cinnabar/8 px-2 py-0.5 font-serif text-[10px] text-cinnabar-deep">
-            {province}
-          </span>
-          <button
-            type="button"
-            onClick={() => set({ province: null })}
-            className="text-[9px] text-ink-stone hover:text-cinnabar"
-          >
-            ×
-          </button>
-        </div>
-      )}
+      {/* Province filter badge — always reserve space to prevent layout shift */}
+      <div className="mb-1 flex h-[22px] items-center gap-2">
+        {province ? (
+          <>
+            <span className="text-[10px] text-ink-stone">当前范围：</span>
+            <span className="rounded-[2px] border border-cinnabar/40 bg-cinnabar/8 px-2 py-0.5 font-serif text-[10px] text-cinnabar-deep">
+              {province}
+            </span>
+            <button
+              type="button"
+              onClick={() => set({ province: null })}
+              className="text-[9px] text-ink-stone hover:text-cinnabar"
+            >
+              ×
+            </button>
+          </>
+        ) : (
+          <span className="text-[10px] text-ink-stone/0 select-none">占位</span>
+        )}
+      </div>
 
       {/* ── Main 3-column grid ─────────────────────────────────────────────── */}
       <div className="grid h-full min-h-0 grid-cols-12 gap-2">
@@ -237,7 +244,7 @@ export function TrajectoriesPage() {
               <div className="min-h-0 flex-1">
                 {provinceFilteredRecords.length > 0 ? (
                   <ParallelCoordinatesChart
-                    key={province ?? 'all'}
+                    key={chartKey}
                     records={provinceFilteredRecords}
                     focusDimension={focusDimension}
                     brushedIds={brushedIds}
