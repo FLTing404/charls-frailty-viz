@@ -135,7 +135,6 @@ export function TrajectoriesPage() {
             <h1 className="font-serif text-lg font-semibold tracking-wide text-ink">
               驱动因素与衰弱关联
             </h1>
-            <p className="text-[10px] text-ink-stone">ACE · 抑郁 · 睡眠 · 社会联系 ↔ FI</p>
           </div>
           <div className="hidden items-center gap-2 md:flex">
             <Badge tone="robust">健壮</Badge>
@@ -196,7 +195,7 @@ export function TrajectoriesPage() {
             />
           </InkBorder>
           <InkBorder className="panel flex min-h-0 flex-1 flex-col p-2">
-            <SectionTitle index="L1" title="省份分布" subtitle="点击省份筛选数据 · 再次点击取消" />
+            <SectionTitle index="L1" title="省份分布" />
             <div className="ink-divider my-1" />
             <div className="min-h-0 flex-1">
               <ProvinceMapPanel
@@ -217,7 +216,6 @@ export function TrajectoriesPage() {
               <SectionTitle
                 index="R1"
                 title="相关性热力图"
-                subtitle={`Spearman ρ · n=${correlation?.n ?? '—'} · 点击切换焦点`}
               />
               <div className="ink-divider my-1" />
               <div className="min-h-0 flex-1">
@@ -234,7 +232,6 @@ export function TrajectoriesPage() {
               <SectionTitle
                 index="R2"
                 title="平行坐标图"
-                subtitle="ACE → 睡眠 → 社会联系 → 抑郁 → FI · 在轴上拖拽框选子群"
               />
               <div className="ink-divider my-1" />
               <div className="min-h-0 flex-1">
@@ -258,9 +255,9 @@ export function TrajectoriesPage() {
           </div>
 
           {/* Row 2: B1 wider, B2 square */}
-          <div className="flex gap-2" style={{ flex: '0 0 340px' }}>
+          <div className="flex gap-2" style={{ flex: '0 0 420px' }}>
             <InkBorder className="panel flex min-w-0 flex-1 flex-col p-2">
-              <SectionTitle index="B1" title="流向 · 分布" subtitle="桑基图 / 散点气泡图切换" />
+              <SectionTitle index="B1" title="流向 · 分布" />
               <div className="ink-divider my-1" />
               <SankeyScatterPanel
                 records={filteredRecords}
@@ -270,8 +267,8 @@ export function TrajectoriesPage() {
               />
             </InkBorder>
 
-            <InkBorder className="panel flex h-full w-[340px] shrink-0 flex-col p-2">
-              <SectionTitle index="B2" title="构成 · 关联" subtitle="旭日图 / 和弦图切换" />
+            <InkBorder className="panel flex h-full w-[380px] shrink-0 flex-col p-2">
+              <SectionTitle index="B2" title="构成 · 关联" />
               <div className="ink-divider my-1" />
               <SunburstChordPanel
                 records={filteredRecords}

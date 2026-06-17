@@ -96,11 +96,6 @@ export function SnapshotGeoStage({
         </aside>
       )}
 
-      {onProvinceClick && (
-        <div className="pointer-events-none absolute bottom-2 left-2 z-10 rounded-sm border border-ink/10 bg-paper-alt/78 px-2 py-1 text-[9px] text-ink-stone backdrop-blur-[2px]">
-          点击省份 → 跳转多维分析
-        </div>
-      )}
     </div>
   )
 }

@@ -357,13 +357,7 @@ function SankeySVG({
               >
                 <rect width={nw} height={nh} rx={2} fill={fill} fillOpacity={0.92}
                   stroke={inkWash.ink} strokeOpacity={0.3} strokeWidth={0.5} />
-                {nh >= 10 && (
-                  <text x={nw / 2} y={nh / 2} dy="0.32em" textAnchor="middle"
-                    fill={inkWash.ink}
-                    style={{ fontFamily: '"Noto Serif SC", serif', fontSize: nh >= 16 ? 9 : 7 }}>
-                    {nh >= 16 ? `${node.label} ${formatNumber(node.count)}` : formatNumber(node.count)}
-                  </text>
-                )}
+                {/* Node labels removed — see legend below for state→color mapping */}
               </g>
             )
           })}

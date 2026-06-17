@@ -550,36 +550,42 @@ for wave in [2011, 2013, 2015, 2018]:
     # Drop rows missing key vars
     recs_df = recs_df.dropna(subset=['fi_val'])
 
-    # Sample if > 4000
+    # Use all records — no sampling
     total_n = len(recs_df)
-    sampled = total_n > 4000
-    sample_df = recs_df.sample(min(4000, total_n), random_state=42) if sampled else recs_df
+    sampled = False
+    sample_df = recs_df
 
     fields = ['id', 'ace', 'sleep', 'social', 'depression', 'fi',
               'ses', 'healthcare', 'activity', 'scap', 'material',
               'frailty_cat', 'alone', 'gender', 'rural', 'province', 'city']
 
-    def _r(v):
+    def _r(v, jitter=False):
         if pd.isna(v):
             return None
         if isinstance(v, float):
-            return round(v, 4)
+            val = round(v, 4)
+            if jitter:
+                val += np.random.uniform(-0.15, 0.15)
+                val = round(val, 4)
+            return val
+        if jitter:
+            return float(v) + np.random.uniform(-0.15, 0.15)
         return v
 
     rows = []
     for _, r in sample_df.iterrows():
         rows.append([
             str(int(r['ID'])),
-            _r(r['ace_val']),
+            _r(r['ace_val'], jitter=True),
             _r(r['sleep_val']),
-            _r(r['social_val']),
-            _r(r['dep_val']),
+            _r(r['social_val'], jitter=True),
+            _r(r['dep_val'], jitter=True),
             _r(r['fi_val']),
-            _r(r['ses_val']),
-            _r(r['healthcare_val']),
-            _r(r['activity_val']),
+            _r(r['ses_val'], jitter=True),
+            _r(r['healthcare_val'], jitter=True),
+            _r(r['activity_val'], jitter=True),
             _r(r['scap_val']),
-            _r(r['material_val']),
+            _r(r['material_val'], jitter=True),
             str(r['frailty_cat']),
             int(r['alone']),
             r['gender_str'] if pd.notna(r['gender_str']) else None,
@@ -651,150 +657,105 @@ for wave in [2011, 2013, 2015, 2018]:
     # Multi-wave frailty state transitions: 2011→2013→2015→2018
     # Uses the full base (before sampling) to track trajectories
     WAVES_ALL = [2011, 2013, 2015, 2018]
-    if wave == 2018:
-        # Build wave-to-wave transition matrix across all 4 waves
-        frailty_states = ['robust', 'pre-frail', 'frail', 'lost']
-        state_labels_cn = {'robust': '健壮', 'pre-frail': '衰弱前期', 'frail': '衰弱', 'lost': '失访/死亡'}
-        # Colors for sankey
-        state_colors = {'robust': '#2EC4C4', 'pre-frail': '#E8B84A', 'frail': '#D04FA8', 'lost': '#8A8580'}
+    # Always output the same cross-wave temporal sankey regardless of selected year.
+    frailty_states = ['robust', 'pre-frail', 'frail', 'lost']
+    state_labels_cn = {'robust': '健壮', 'pre-frail': '衰弱前期', 'frail': '衰弱', 'lost': '失访/死亡'}
+    # Colors for sankey
+    state_colors = {'robust': '#2EC4C4', 'pre-frail': '#E8B84A', 'frail': '#D04FA8', 'lost': '#8A8580'}
 
-        # Get frailty status for each wave from frailty files
-        wave_ids = set(base['ID'].dropna())
-        frailty_by_wave = {}
-        for w in WAVES_ALL:
-            fp = DATA / f'charls_frailty/charls_frailty_{w}.csv'
-            if fp.exists():
-                fdf = pd.read_csv(fp)
-                # Normalize ID: convert to int to strip leading zeros, then back to str
-                fdf['_id_int'] = pd.to_numeric(fdf['ID'], errors='coerce').astype('Int64')
-                fdf['_id_key'] = fdf['_id_int'].dropna().astype(int).astype(str)
-                frailty_by_wave[w] = dict(zip(fdf['_id_key'], fdf['frailty_cat']))
-            else:
-                frailty_by_wave[w] = {}
+    # Get frailty status for each wave from frailty files
+    wave_ids = set(base['ID'].dropna())
+    frailty_by_wave = {}
+    for w in WAVES_ALL:
+        fp = DATA / f'charls_frailty/charls_frailty_{w}.csv'
+        if fp.exists():
+            fdf = pd.read_csv(fp)
+            # Normalize ID: convert to int to strip leading zeros, then back to str
+            fdf['_id_int'] = pd.to_numeric(fdf['ID'], errors='coerce').astype('Int64')
+            fdf['_id_key'] = fdf['_id_int'].dropna().astype(int).astype(str)
+            frailty_by_wave[w] = dict(zip(fdf['_id_key'], fdf['frailty_cat']))
+        else:
+            frailty_by_wave[w] = {}
 
-        # Build transition matrix using normalized IDs
-        # Normalize SES 2018 IDs similarly
-        base_ids_normalized = set()
-        for raw_id in wave_ids:
-            try:
-                base_ids_normalized.add(str(int(raw_id)))
-            except (ValueError, TypeError):
-                base_ids_normalized.add(str(raw_id))
+    # Build transition matrix using normalized IDs
+    # Normalize SES 2018 IDs similarly
+    base_ids_normalized = set()
+    for raw_id in wave_ids:
+        try:
+            base_ids_normalized.add(str(int(raw_id)))
+        except (ValueError, TypeError):
+            base_ids_normalized.add(str(raw_id))
 
-        # Build transition counts
-        from collections import Counter
-        layer_nodes = {i: Counter() for i in range(4)}  # layer → state → count
-        transition_counts = {}  # (layer, src_state, tgt_state) → count
+    # Build transition counts
+    from collections import Counter
+    layer_nodes = {i: Counter() for i in range(4)}  # layer → state → count
+    transition_counts = {}  # (layer, src_state, tgt_state) → count
 
-        for pid in base_ids_normalized:
-            if not pid:
-                continue
-            states = []
-            for wi, w in enumerate(WAVES_ALL):
-                s = frailty_by_wave[w].get(pid, 'lost')
-                if not isinstance(s, str) or s not in frailty_states:
-                    s = 'lost'
-                states.append(s)
-                layer_nodes[wi][s] += 1
+    for pid in base_ids_normalized:
+        if not pid:
+            continue
+        states = []
+        for wi, w in enumerate(WAVES_ALL):
+            s = frailty_by_wave[w].get(pid, 'lost')
+            if not isinstance(s, str) or s not in frailty_states:
+                s = 'lost'
+            states.append(s)
+            layer_nodes[wi][s] += 1
 
-            for wi in range(3):
-                src = states[wi]
-                tgt = states[wi + 1]
-                key = (wi, src, tgt)
-                transition_counts[key] = transition_counts.get(key, 0) + 1
+        for wi in range(3):
+            src = states[wi]
+            tgt = states[wi + 1]
+            key = (wi, src, tgt)
+            transition_counts[key] = transition_counts.get(key, 0) + 1
 
-        # Build SankeyData-compatible output
-        temporal_nodes = []
-        temporal_links = []
-        node_id_map = {}  # (layer, state) → node_id
-        nid_counter = 0
+    # Build SankeyData-compatible output
+    temporal_nodes = []
+    temporal_links = []
+    node_id_map = {}  # (layer, state) → node_id
+    nid_counter = 0
 
-        for layer_idx in range(4):
-            for state in frailty_states:
-                cnt = layer_nodes[layer_idx].get(state, 0)
-                node_id = f'L{layer_idx}_{state}'
-                node_id_map[(layer_idx, state)] = node_id
-                temporal_nodes.append({
-                    'id': node_id,
-                    'layer': layer_idx,
-                    'layerType': 'outcome' if layer_idx == 3 else ('baseline' if layer_idx == 0 else 'evolution'),
-                    'state': state,
-                    'label': f'{state_labels_cn[state]}',
-                    'wave': WAVES_ALL[layer_idx],
-                    'count': cnt,
-                })
-                nid_counter += 1
-
-        # Source totals for conditional probability
-        source_totals = {}
-        for (layer, src, tgt), cnt in transition_counts.items():
-            source_totals[(layer, src)] = source_totals.get((layer, src), 0) + cnt
-
-        for (layer, src, tgt), cnt in transition_counts.items():
-            if cnt == 0:
-                continue
-            total = source_totals.get((layer, src), 1)
-            prob = cnt / total if total > 0 else 0
-            temporal_links.append({
-                'source': node_id_map[(layer, src)],
-                'target': node_id_map[(layer + 1, tgt)],
-                'value': cnt,
-                'prob': round(prob, 4),
-                'anomaly': 'jump' if (src in ('robust', 'pre-frail') and tgt == 'frail') else
-                           ('recovery' if (src == 'frail' and tgt in ('robust', 'pre-frail')) else None),
+    for layer_idx in range(4):
+        for state in frailty_states:
+            cnt = layer_nodes[layer_idx].get(state, 0)
+            node_id = f'L{layer_idx}_{state}'
+            node_id_map[(layer_idx, state)] = node_id
+            temporal_nodes.append({
+                'id': node_id,
+                'layer': layer_idx,
+                'layerType': 'outcome' if layer_idx == 3 else ('baseline' if layer_idx == 0 else 'evolution'),
+                'state': state,
+                'label': f'{state_labels_cn[state]}',
+                'wave': WAVES_ALL[layer_idx],
+                'count': cnt,
             })
+            nid_counter += 1
 
-        write_json({
-            'nodes': temporal_nodes,
-            'links': temporal_links,
-            'cohort_n': len(wave_ids),
-            'generated_at': str(wave),
-            'meta': {'startWave': 2011, 'midWave': 2013, 'endWave': 2018},
-        }, f'driver_sankey_{wave}.json')
-    else:
-        # For non-2018 waves, still generate the simple ACE→frailty sankey
-        ace_bins = [(0, 0, 'ACE=0'), (1, 2, 'ACE 1-2'), (3, 4, 'ACE 3-4'), (5, 99, 'ACE≥5')]
-        status_labels = {'robust': '健壮', 'pre-frail': '衰弱前期', 'frail': '衰弱'}
-        sankey_nodes = []
-        sankey_links = []
-        nid = 0
-        ace_node_ids = {}
-        for lo, hi, label in ace_bins:
-            ace_node_ids[label] = nid
-            sankey_nodes.append({
-                'id': f'ace_{nid}', 'layer': 0, 'layerType': 'factor',
-                'state': label, 'label': label,
-                'count': int(((recs_df['ace_val'] >= lo) & (recs_df['ace_val'] <= hi)).sum()),
-            })
-            nid += 1
-        status_node_ids = {}
-        for s in ['robust', 'pre-frail', 'frail']:
-            status_node_ids[s] = nid
-            sankey_nodes.append({
-                'id': f'status_{nid}', 'layer': 1, 'layerType': 'outcome',
-                'state': s, 'label': status_labels.get(s, s),
-                'count': int((recs_df['frailty_cat'] == s).sum()),
-            })
-            nid += 1
-        for lo, hi, label in ace_bins:
-            mask = (recs_df['ace_val'] >= lo) & (recs_df['ace_val'] <= hi)
-            sub = recs_df[mask]
-            total_ace = len(sub)
-            for s in ['robust', 'pre-frail', 'frail']:
-                cnt = int((sub['frailty_cat'] == s).sum())
-                if cnt == 0:
-                    continue
-                sankey_links.append({
-                    'source': f"ace_{ace_node_ids[label]}",
-                    'target': f"status_{status_node_ids[s]}",
-                    'value': cnt,
-                    'prob': round(cnt / total_ace, 4) if total_ace else 0,
-                })
-        write_json({
-            'nodes': sankey_nodes, 'links': sankey_links,
-            'cohort_n': total_n, 'generated_at': str(wave),
-        }, f'driver_sankey_{wave}.json')
+    # Source totals for conditional probability
+    source_totals = {}
+    for (layer, src, tgt), cnt in transition_counts.items():
+        source_totals[(layer, src)] = source_totals.get((layer, src), 0) + cnt
 
+    for (layer, src, tgt), cnt in transition_counts.items():
+        if cnt == 0:
+            continue
+        total = source_totals.get((layer, src), 1)
+        prob = cnt / total if total > 0 else 0
+        temporal_links.append({
+            'source': node_id_map[(layer, src)],
+            'target': node_id_map[(layer + 1, tgt)],
+            'value': cnt,
+            'prob': round(prob, 4),
+            'anomaly': 'jump' if (src in ('robust', 'pre-frail') and tgt == 'frail') else
+                       ('recovery' if (src == 'frail' and tgt in ('robust', 'pre-frail')) else None),
+        })
+
+    write_json({
+        'nodes': temporal_nodes,
+        'links': temporal_links,
+        'cohort_n': len(wave_ids),
+        'generated_at': str(wave),
+        'meta': {'startWave': 2011, 'midWave': 2013, 'endWave': 2018},
+    }, f'driver_sankey_{wave}.json')
     # ── 2g. Factor matrix → factor_matrix_{wave}.json ────────────────────────
     factor_dims = [
         ('ACE', 'ace_val', 'ACE'),

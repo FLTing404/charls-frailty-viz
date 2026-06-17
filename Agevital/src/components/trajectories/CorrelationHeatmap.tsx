@@ -139,19 +139,6 @@ export function CorrelationHeatmap({
   return (
     <div className={className}>
       <div ref={ref} style={{ width: '100%', height: '100%', minHeight: 220 }} />
-      {focusDimension && data && (
-        <div className="mt-1 border-l-2 border-cinnabar pl-2 text-[10px] text-ink-wash">
-          焦点：{data.labels[data.keys.indexOf(focusDimension)]}
-          {' · '}
-          ρ(FI) ={' '}
-          {(() => {
-            const fiIdx = data.keys.indexOf('fi')
-            const dimIdx = data.keys.indexOf(focusDimension)
-            const rho = data.matrix[dimIdx]?.[fiIdx]
-            return rho != null ? `${rho >= 0 ? '+' : ''}${rho.toFixed(3)}` : '—'
-          })()}
-        </div>
-      )}
     </div>
   )
 }

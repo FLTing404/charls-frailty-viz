@@ -57,7 +57,7 @@ export function SankeyScatterPanel({
       <ToggleBar
         options={[
           { key: 'sankey', label: '桑基图' },
-          { key: 'bubble', label: '散点 / 气泡' },
+          { key: 'bubble', label: '气泡图' },
         ]}
         active={active}
         onChange={(k) => setActive(k as 'sankey' | 'bubble')}

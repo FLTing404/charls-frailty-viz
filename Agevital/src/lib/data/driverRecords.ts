@@ -1,19 +1,25 @@
 import type { DriverRecord, DriverRecordsPayload } from '@/types/data'
 
+function safeNum(v: unknown): number {
+  if (v == null) return NaN
+  const n = Number(v)
+  return Number.isNaN(n) ? NaN : n
+}
+
 export function parseDriverRecords(payload: DriverRecordsPayload): DriverRecord[] {
   const idx = Object.fromEntries(payload.fields.map((f, i) => [f, i]))
   return payload.rows.map((row) => ({
     id: String(row[idx.id]),
-    ace: Number(row[idx.ace]),
-    sleep: Number(row[idx.sleep]),
-    social: Number(row[idx.social]),
-    depression: Number(row[idx.depression]),
-    fi: Number(row[idx.fi]),
-    ses: Number(row[idx.ses] ?? 0),
-    healthcare: Number(row[idx.healthcare] ?? 0),
-    activity: Number(row[idx.activity] ?? 0),
-    scap: Number(row[idx.scap] ?? 0),
-    material: Number(row[idx.material] ?? 0),
+    ace: safeNum(row[idx.ace]),
+    sleep: safeNum(row[idx.sleep]),
+    social: safeNum(row[idx.social]),
+    depression: safeNum(row[idx.depression]),
+    fi: safeNum(row[idx.fi]),
+    ses: safeNum(row[idx.ses] ?? 0),
+    healthcare: safeNum(row[idx.healthcare] ?? 0),
+    activity: safeNum(row[idx.activity] ?? 0),
+    scap: safeNum(row[idx.scap] ?? 0),
+    material: safeNum(row[idx.material] ?? 0),
     frailty_cat: String(row[idx.frailty_cat]),
     alone: (Number(row[idx.alone]) === 1 ? 1 : 0) as 0 | 1,
     gender: (row[idx.gender] as DriverRecord['gender']) ?? null,

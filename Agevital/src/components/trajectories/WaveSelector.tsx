@@ -56,7 +56,7 @@ export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provi
         <p className="text-[9px] tracking-widest text-ink-stone">样本量</p>
         <p className="mt-1 font-serif text-lg text-ink">{formatNumber(sampleN)}</p>
         <p className="text-[10px] text-ink-stone">
-          {sampled ? `分层抽样 · 总体 ${formatNumber(totalN)}` : `有效样本 ${formatNumber(totalN)}`}
+          {totalN !== sampleN ? `筛选后 ${formatNumber(sampleN)} / 总体 ${formatNumber(totalN)}` : `有效样本 ${formatNumber(totalN)}`}
         </p>
       </div>
 

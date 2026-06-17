@@ -47,15 +47,36 @@ export function ParallelCoordinatesChart({
   const recordsRef = useRef(records)
   recordsRef.current = records
 
-  const parallelData = useMemo(
-    () =>
-      records.map((r) => ({
-        value: [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material],
+  const parallelData = useMemo(() => {
+    // Compute per-dimension means from non-NaN values for missing-data imputation.
+    // Imputation is confined to this chart only — underlying records are unchanged.
+    const sums = new Array(AXIS_DIMS.length).fill(0)
+    const counts = new Array(AXIS_DIMS.length).fill(0)
+    for (const r of records) {
+      const vals = [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material]
+      for (let i = 0; i < vals.length; i++) {
+        const v = vals[i]
+        if (v != null && !Number.isNaN(v)) {
+          sums[i] += v
+          counts[i]++
+        }
+      }
+    }
+    const means = sums.map((s, i) => (counts[i] > 0 ? s / counts[i] : 0))
+
+    return records.map((r) => {
+      const vals = [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material]
+      const imputed = vals.map((v, i) => {
+        if (v != null && !Number.isNaN(v)) return v
+        return means[i] // replace missing with column mean
+      })
+      return {
+        value: imputed,
         id: r.id,
         frailty_cat: r.frailty_cat,
-      })),
-    [records],
-  )
+      }
+    })
+  }, [records])
 
   const option = useMemo<echarts.EChartsCoreOption>(() => {
     const focusIdx = focusDimension ? AXIS_ORDER.indexOf(focusDimension) : -1

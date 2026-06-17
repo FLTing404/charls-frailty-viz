@@ -17,20 +17,12 @@ interface DriverScatterBubbleProps {
   className?: string
 }
 
-function aceTier(ace: number, records: DriverRecord[]): 'high' | 'mid' | 'low' {
-  const sorted = records.map((r) => r.ace).sort((a, b) => a - b)
-  const q33 = sorted[Math.floor(sorted.length * 0.33)] ?? 0
-  const q67 = sorted[Math.floor(sorted.length * 0.67)] ?? 0
-  if (ace >= q67) return 'high'
-  if (ace <= q33) return 'low'
-  return 'mid'
+const FI_TIER_COLORS = {
+  high: inkWash.cinnabar,   // FI ≥ 0.25 → frail
+  mid: inkWash.amber,       // 0.10 < FI < 0.25 → pre-frail
+  low: inkWash.bamboo,      // FI ≤ 0.10 → robust
 }
 
-const ACE_COLORS = {
-  high: inkWash.cinnabar,
-  mid: inkWash.amber,
-  low: inkWash.bamboo,
-}
 
 export function DriverScatterBubble({
   records,
@@ -86,22 +78,37 @@ export function DriverScatterBubble({
       }
     }
 
-    const maxSocial = Math.max(...records.map((r) => r.social), 1)
-    const data = records.map((r) => {
-      const tier = aceTier(r.ace, records)
-      return {
-        value: [r.depression, r.fi, r.social],
-        tier,
-        itemStyle: { color: ACE_COLORS[tier], opacity: 0.6 },
-      }
-    })
+    // ── Bubble mode ──
+    // X = depression, Y = ACE, size = FI, color = FI tier
+    const getFiTier = (fi: number) =>
+      fi >= 0.25 ? 'high' : fi <= 0.10 ? 'low' : 'mid'
+
+    // Avoid Math.max(...hugeArray) which overflows the call stack
+    const fiValues = records.map((r) => r.fi)
+    let maxFi = 0.001
+    for (let i = 0; i < fiValues.length; i++) {
+      if (fiValues[i] > maxFi) maxFi = fiValues[i]
+    }
+
+    const data = records
+      .filter((r) => r.ace > 0)
+      .map((r) => {
+        const tier = getFiTier(r.fi)
+        return {
+          value: [r.depression, r.ace, r.fi],
+          fiTier: tier,
+          frailty_cat: r.frailty_cat,
+          itemStyle: { color: FI_TIER_COLORS[tier], opacity: 0.6 },
+        }
+      })
+
     return {
       grid: { top: 28, left: 52, right: 16, bottom: 40 },
       tooltip: {
         formatter: (p: any) => {
-          const [dep, fi, soc] = p.data.value
-          return `<div style="font-family:'Noto Serif SC',serif;font-size:11px">抑郁 ${dep.toFixed(1)} · FI ${fi.toFixed(3)}</div>
-            <div style="font-size:10px;color:${inkWash.wash};margin-top:4px">社会联系 ${soc.toFixed(0)} · ACE ${p.data.tier === 'high' ? '高' : p.data.tier === 'low' ? '低' : '中'}</div>`
+          const [dep, ace, fi] = p.data.value
+          return `<div style="font-family:'Noto Serif SC',serif;font-size:11px">抑郁 ${dep.toFixed(1)} · ACE ${ace.toFixed(2)}</div>
+            <div style="font-size:10px;color:${inkWash.wash};margin-top:4px">FI ${fi.toFixed(3)} · ${tFrailty(p.data.frailty_cat)}</div>`
         },
       },
       xAxis: {
@@ -110,7 +117,9 @@ export function DriverScatterBubble({
         axisLabel: { color: inkWash.stone, fontSize: 10 },
       },
       yAxis: {
-        name: 'FI',
+        name: 'ACE',
+        min: 50,
+        max: 100,
         nameTextStyle: { color: inkWash.wash, fontSize: 10 },
         axisLabel: { color: inkWash.stone, fontSize: 10 },
         splitLine: { lineStyle: { color: 'rgba(28,28,28,0.06)', type: 'dashed' } },
@@ -119,7 +128,7 @@ export function DriverScatterBubble({
         {
           type: 'scatter',
           data,
-          symbolSize: (val: number[]) => 4 + (val[2] / maxSocial) * 18,
+          symbolSize: (val: number[]) => 4 + (val[2] / maxFi) * 18,
         },
       ],
     }
