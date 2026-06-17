@@ -216,6 +216,11 @@ export interface DriverSankeyPayload {
   links: SankeyLink[]
   cohort_n: number
   generated_at: string
+  meta?: {
+    startWave: Wave
+    midWave: Wave
+    endWave: Wave
+  }
 }
 
 export interface DriverChordPayload {

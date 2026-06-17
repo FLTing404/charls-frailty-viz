@@ -24,12 +24,23 @@ pip install pandas numpy scipy pyreadstat
 
 ### 第一步：准备原始数据
 
+<<<<<<< HEAD
 原始 CHARLS 数据需从 [charls.pku.edu.cn](https://charls.pku.edu.cn) 申请获取，放置在以下目录（相对于项目根目录）：
 
 ```
 data/
 ├── charls_ace/
 │   └── charls_ace_after_pca.csv       ← 童年逆境指数（已预处理）
+=======
+原始 CHARLS 数据需从 [charls.pku.edu.cn](https://charls.pku.edu.cn) 申请获取，放置在以下目录（相对于项目根目录 `Agevital/`）：
+
+```
+data/
+├── charls/
+│   ├── 2011/
+│   │   └── PSU.dta                      ← 社区-省份编码映射（必需）
+│   └── Demographic_Backgrounds.dta      ← 性别信息（必需）
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 ├── charls_frailty/
 │   ├── charls_frailty_2011.csv
 │   ├── charls_frailty_2013.csv
@@ -39,8 +50,16 @@ data/
 │   ├── ses_2011.csv  ses_2013.csv  ses_2015.csv  ses_2018.csv
 ├── charls_sleep_by_wave/
 │   ├── sleep_2011_all_variables.csv  ...（四波次）
+<<<<<<< HEAD
 └── charls_social_participation_by_wave/
     ├── socc_2011.csv  socc_2013.csv  socc_2015.csv  socc_2018.csv
+=======
+├── charls_social_participation_by_wave/
+│   ├── socc_2011.csv  socc_2013.csv  socc_2015.csv  socc_2018.csv
+└── data_json/
+    └── charls_ace/
+        └── charls_ace_after_pca.json    ← 童年逆境指数（已预处理）
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 ```
 
 > 请勿将含个人标识的原始数据提交至公开仓库。
@@ -49,22 +68,35 @@ data/
 
 ### 第二步：生成可视化数据
 
+<<<<<<< HEAD
 在项目根目录运行：
+=======
+在项目根目录 `Agevital/` 运行：
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 
 ```bash
 python scripts/generate_viz_data.py
 ```
 
+<<<<<<< HEAD
 脚本输出 44 个 JSON 文件到 `Agevital/public/data/`，每个调查波次（2011/2013/2015/2018）11 个：
+=======
+脚本输出 32 个 JSON 文件到 `viz-app/public/data/`，每个调查波次（2011/2013/2015/2018）8 个：
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 
 | 文件 | 内容 |
 |------|------|
 | `map_province_{year}.json` | 28 省份衰弱率、衰弱前期率、样本量、男性比、城镇比 |
+<<<<<<< HEAD
 | `map_city_{year}.json` | 城市级衰弱率统计（含 GPS 坐标，用于气泡定位） |
 | `deficit_network_{year}.json` | 26 项缺陷共病力导向图（节点 + 边） |
 | `deficit_province_{year}.json` | 各省各缺陷患病率 |
 | `deficit_city_{year}.json` | 各城市各缺陷患病率（含 GPS 坐标，用于地图气泡叠加） |
 | `driver_records_{year}.json` | 个体级五维驱动因素记录（含省份 + 城市字段） |
+=======
+| `deficit_network_{year}.json` | 26 项缺陷共病力导向图（节点 + 边） |
+| `driver_records_{year}.json` | 个体级五维驱动因素记录（含省份字段） |
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 | `correlation_matrix_{year}.json` | ACE / 睡眠 / 社会联系 / 抑郁 / FI 的 Spearman ρ 矩阵 |
 | `driver_chord_{year}.json` | 驱动因素关联强度（和弦图格式） |
 | `driver_sankey_{year}.json` | ACE 分组 → 衰弱状态流向（桑基格式） |
@@ -75,6 +107,7 @@ python scripts/generate_viz_data.py
 
 ### 第三步：放置地图 GeoJSON
 
+<<<<<<< HEAD
 地图需要两个文件，手动放到 `Agevital/public/geo/`：
 
 ```bash
@@ -86,6 +119,19 @@ curl -L -o Agevital/public/geo/china-provinces.json \
 
 # 世界地图（背景底图）
 curl -L -o Agevital/public/geo/world.json \
+=======
+地图需要两个文件，手动放到 `viz-app/public/geo/`：
+
+```bash
+mkdir -p viz-app/public/geo
+
+# 中国省级行政区划
+curl -L -o viz-app/public/geo/china-provinces.json \
+  "https://raw.githubusercontent.com/apache/echarts/master/test/data/map/json/china.json"
+
+# 世界地图（背景底图）
+curl -L -o viz-app/public/geo/world.json \
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
   "https://raw.githubusercontent.com/apache/echarts/master/test/data/map/json/world.json"
 ```
 
@@ -98,24 +144,38 @@ curl -L -o Agevital/public/geo/world.json \
 ### 第四步：安装前端依赖并启动
 
 ```bash
+<<<<<<< HEAD
 cd Agevital
+=======
+cd viz-app
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 npm install
 npm run dev
 ```
 
 浏览器打开：
 
+<<<<<<< HEAD
 - **快照页（空间分布）**：http://localhost:5173/snapshot
 - **轨迹页（多维分析）**：http://localhost:5173/trajectories
 
 首页自动重定向到 `/trajectories`。
 
+=======
+- **第一页（空间分布）**：http://localhost:5173/snapshot
+- **第二页（多维分析）**：http://localhost:5173/trajectories
+
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 ---
 
 ### 生产构建
 
 ```bash
+<<<<<<< HEAD
 cd Agevital
+=======
+cd viz-app
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 npm run build    # 类型检查 + 打包到 dist/
 npm run preview  # 本地预览构建产物
 ```
@@ -124,6 +184,7 @@ npm run preview  # 本地预览构建产物
 
 ## 页面说明
 
+<<<<<<< HEAD
 ### 快照页 `/snapshot` — 衰弱空间分布
 
 | 区域 | 功能 |
@@ -134,6 +195,17 @@ npm run preview  # 本地预览构建产物
 | **顶部年份选择器** | 切换 2011 / 2013 / 2015 / 2018，地图与力图同步更新 |
 
 ### 轨迹页 `/trajectories` — 多维驱动因素分析
+=======
+### 第一页 `/snapshot` — 衰弱空间分布
+
+| 区域 | 功能 |
+|------|------|
+| **中国 choropleth 地图** | 颜色深浅反映各省衰弱率；悬停显示详细数据；**点击省份 → 跳转第二页并自动筛选** |
+| **缺陷力导向图（右侧浮层）** | 26 项衰弱缺陷构成的共病网络；节点大小 = 患病率，边粗细 = 共现程度 |
+| **顶部年份选择器** | 切换 2011 / 2013 / 2015 / 2018，地图与力图同步更新 |
+
+### 第二页 `/trajectories` — 多维驱动因素分析
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 
 | 区域 | 功能 |
 |------|------|
@@ -147,10 +219,17 @@ npm run preview  # 本地预览构建产物
 **跨页面联动：**
 
 ```
+<<<<<<< HEAD
 快照页 点击省份
   → 设置全局 province 筛选
   → 跳转 /trajectories?province=Sichuan
   → 轨迹页读取 URL 参数，所有图表自动过滤该省数据
+=======
+第一页 点击省份
+  → 设置全局 province 筛选
+  → 跳转 /trajectories?province=Sichuan
+  → 第二页读取 URL 参数，所有图表自动过滤该省数据
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
   → 左侧地图高亮选中省份，顶部显示范围 badge
   → 点击 badge 上的 × 清除筛选，恢复全国视图
 ```
@@ -160,6 +239,7 @@ npm run preview  # 本地预览构建产物
 ## 项目结构
 
 ```
+<<<<<<< HEAD
 .
 ├── data/                              # 原始 CHARLS 数据（需自行获取）
 ├── scripts/
@@ -188,6 +268,30 @@ npm run preview  # 本地预览构建产物
         │   └── theme/                 # ink-wash 色彩系统
         └── types/
             └── data.d.ts              # 全部 TypeScript 类型定义
+=======
+Agevital/
+├── data/                              # 原始 CHARLS 数据（需自行获取）
+├── data_json/                         # 中间 JSON（原始数据转换版）
+├── scripts/
+│   └── generate_viz_data.py           # 数据处理脚本 → viz-app/public/data/
+└── viz-app/
+    ├── public/
+    │   ├── data/                      # 生成的可视化 JSON（32 个文件）
+    │   └── geo/                       # 地图 GeoJSON（需手动放置）
+    └── src/
+        ├── pages/
+        │   ├── SnapshotPage.tsx       # 第一页：地图 + 力导向图
+        │   └── TrajectoriesPage.tsx   # 第二页：多维分析
+        ├── components/
+        │   ├── charts/                # ECharts 封装（地图、力图、旭日图等）
+        │   ├── snapshot/              # 第一页专用组件
+        │   └── trajectories/          # 第二页专用组件（含 ProvinceMapPanel）
+        └── lib/
+            ├── store/                 # Zustand 全局状态（year / province / brushedIds）
+            ├── data/                  # JSON 加载器 + driver records 解析
+            ├── charts/                # ECharts option 构建函数
+            └── theme/                 # ink-wash 色彩系统
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 ```
 
 ---
@@ -208,10 +312,17 @@ npm run preview  # 本地预览构建产物
 ## 常见问题
 
 **地图空白 / 加载失败**
+<<<<<<< HEAD
 检查 `Agevital/public/geo/` 目录是否存在 `china-provinces.json` 和 `world.json`，可直接访问 `http://localhost:5173/geo/china-provinces.json` 验证。
 
 **数据全部 404**
 先运行 `python scripts/generate_viz_data.py`，确认 `Agevital/public/data/` 下有 44 个 `.json` 文件。
+=======
+检查 `viz-app/public/geo/` 目录是否存在 `china-provinces.json` 和 `world.json`，可直接访问 `http://localhost:5173/geo/china-provinces.json` 验证。
+
+**数据全部 404**
+先运行 `python scripts/generate_viz_data.py`，确认 `viz-app/public/data/` 下有 32 个 `.json` 文件。
+>>>>>>> bb84fb01edd0f3ca75cc927cd56c61580105766c
 
 **省份点击后第二页无数据**
 检查 `driver_records_{year}.json` 的 `fields` 数组中是否包含 `"province"`。若无，重新运行数据脚本。

@@ -95,8 +95,8 @@ export function ParallelCoordinatesChart({
         },
       })),
       parallel: {
-        left: 60,
-        right: 40,
+        left: 72,
+        right: 52,
         top: 28,
         bottom: 24,
         parallelAxisDefault: {
