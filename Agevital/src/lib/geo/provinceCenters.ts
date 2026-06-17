@@ -1,0 +1,37 @@
+/**
+ * Approximate geographic centers of Chinese provinces (longitude, latitude)
+ * Used for positioning bubble/scatter overlays on the map.
+ */
+export const PROVINCE_CENTERS: Record<string, [number, number]> = {
+  Beijing: [116.4, 39.9],
+  Tianjin: [117.2, 39.1],
+  Hebei: [114.5, 38.0],
+  Shanxi: [112.5, 37.9],
+  'Inner Mongolia': [111.7, 40.8],
+  Liaoning: [123.4, 41.8],
+  Jilin: [125.3, 43.9],
+  Heilongjiang: [126.6, 45.8],
+  Shanghai: [121.5, 31.2],
+  Jiangsu: [118.8, 32.1],
+  Zhejiang: [120.2, 30.3],
+  Anhui: [117.3, 31.9],
+  Fujian: [118.0, 26.1],
+  Jiangxi: [115.9, 28.7],
+  Shandong: [117.0, 36.7],
+  Henan: [113.7, 34.8],
+  Hubei: [114.3, 30.6],
+  Hunan: [113.0, 28.1],
+  Guangdong: [113.3, 23.1],
+  Guangxi: [108.3, 22.8],
+  Hainan: [110.3, 20.0],
+  Chongqing: [106.5, 29.5],
+  Sichuan: [104.1, 30.7],
+  Guizhou: [106.7, 26.6],
+  Yunnan: [102.7, 25.0],
+  Tibet: [91.1, 29.7],
+  Shaanxi: [108.9, 34.3],
+  Gansu: [103.8, 36.1],
+  Qinghai: [96.0, 35.5],
+  Ningxia: [106.3, 38.5],
+  Xinjiang: [87.6, 43.8],
+}
