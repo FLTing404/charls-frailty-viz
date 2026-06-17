@@ -13,11 +13,6 @@ dist-ssr/
 *.local
 tsconfig.tsbuildinfo
 
-# Preprocess outputs (regenerate: npm run preprocess)
-public/data/
-public/data/**
-public/geo/
-public/geo/**
 
 # ============================================================
 # Large / raw data — do not commit (~900 MB under data/)
