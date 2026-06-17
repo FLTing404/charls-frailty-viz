@@ -15,12 +15,12 @@ export function PageShell({ children, className, title, actions }: PageShellProp
     <div className={cn('relative flex h-full w-full flex-col overflow-hidden', className)}>
       <InkDecor variant="mist" className="pointer-events-none absolute inset-0 z-0" />
       {(title || actions) && (
-        <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-ink/10 bg-paper-alt/50 px-3 py-2 backdrop-blur-[1px]">
-          <div className="min-w-0">{title}</div>
+        <div className="relative z-10 flex shrink-0 items-center justify-between gap-4 border-b border-ink/10 bg-paper-alt/50 px-4 py-2.5 backdrop-blur-[1px]">
+          <div className="min-w-0 flex-1">{title}</div>
           {actions && <div className="shrink-0">{actions}</div>}
         </div>
       )}
-      <div className="relative z-10 min-h-0 flex-1 overflow-hidden px-2 pb-2 pt-1">{children}</div>
+      <div className="relative z-10 min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2">{children}</div>
     </div>
   )
 }

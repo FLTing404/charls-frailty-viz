@@ -13,7 +13,7 @@ export function WaveSelector({ sampleN, totalN, sampled }: WaveSelectorProps) {
   const { year, set } = useGlobalStore()
 
   return (
-    <div className="flex flex-col gap-3 p-2">
+    <div className="flex flex-col gap-3">
       <div>
         <p className="text-[9px] tracking-widest text-ink-stone">调查波次</p>
         <div className="mt-2 flex flex-wrap gap-1">

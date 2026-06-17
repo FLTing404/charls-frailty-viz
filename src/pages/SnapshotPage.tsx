@@ -46,10 +46,11 @@ export function SnapshotPage() {
           <h1 className="font-serif text-lg font-semibold tracking-wide text-ink">
             衰弱空间分布 · {year}
           </h1>
+          <p className="text-[10px] text-ink-stone">省级分布 · 缺陷网络 · 交互联动</p>
         </div>
       }
     >
-      <div className="flex h-full min-h-0 flex-col gap-1">
+      <div className="flex h-full min-h-0 flex-col gap-2">
         {error && (
           <div className="mb-1 border border-cinnabar bg-cinnabar/10 px-2 py-1 text-[11px] text-cinnabar-deep">
             {error}

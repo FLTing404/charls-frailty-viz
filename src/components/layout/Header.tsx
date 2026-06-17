@@ -9,7 +9,7 @@ const navItems = [
 export function Header() {
   return (
     <header className="relative shrink-0 border-b border-ink/15 bg-paper-alt/90 backdrop-blur-[2px]">
-      <div className="flex h-14 w-full items-center justify-between gap-4 px-4">
+      <div className="flex h-14 w-full items-center justify-between gap-3 px-4 sm:gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-cinnabar text-paper shadow-sm">
             <span className="font-serif text-lg font-bold leading-none">齡</span>
@@ -23,14 +23,14 @@ export function Header() {
             </div>
           </div>
         </div>
-        <nav className="flex items-center gap-0.5">
+        <nav className="flex items-center gap-0.5 sm:gap-1">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  'group relative px-4 py-2 text-[11px] tracking-wide transition-colors',
+                  'group relative px-2 py-2 text-[11px] tracking-wide transition-colors sm:px-4',
                   isActive ? 'text-ink' : 'text-ink-wash hover:text-ink',
                 )
               }

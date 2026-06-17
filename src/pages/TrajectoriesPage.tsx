@@ -143,12 +143,12 @@ export function TrajectoriesPage() {
         </div>
       )}
 
-      <div className="grid h-full min-h-0 grid-cols-12 gap-2">
-        <aside className="col-span-12 flex min-h-0 flex-col gap-2 lg:col-span-3">
-          <InkBorder className="panel p-2">
+      <div className="grid h-full min-h-0 grid-cols-12 gap-3">
+        <aside className="col-span-12 flex min-h-0 flex-col gap-3 lg:col-span-3">
+          <InkBorder className="panel p-3">
             <WaveSelector sampleN={records.length} totalN={totalN} sampled={sampled} />
           </InkBorder>
-          <InkBorder className="panel flex min-h-0 flex-1 flex-col p-2">
+          <InkBorder className="panel flex min-h-0 flex-1 flex-col p-3">
             <SectionTitle
               index="L1"
               title="相关性热力图"
@@ -166,8 +166,8 @@ export function TrajectoriesPage() {
           </InkBorder>
         </aside>
 
-        <section className="col-span-12 flex min-h-0 flex-col gap-2 lg:col-span-9">
-          <InkBorder className="panel flex min-h-0 flex-1 flex-col p-2">
+        <section className="col-span-12 flex min-h-0 flex-col gap-3 lg:col-span-9">
+          <InkBorder className="panel flex min-h-0 flex-1 flex-col p-3">
             <SectionTitle
               index="M1"
               title="平行坐标图"
@@ -190,7 +190,7 @@ export function TrajectoriesPage() {
             </div>
           </InkBorder>
 
-          <InkBorder className="panel shrink-0 p-2">
+          <InkBorder className="panel shrink-0 p-3">
             <SectionTitle index="M2" title="辅助视图" subtitle="桑基 · 散点 · 气泡 · 旭日 · 和弦 · 随刷选同步" />
             <DriverDetailTabs
               detailTab={detailTab}
@@ -203,7 +203,7 @@ export function TrajectoriesPage() {
             />
           </InkBorder>
 
-          <InkBorder className="panel shrink-0 p-2">
+          <InkBorder className="panel shrink-0 p-3">
             <SectionTitle
               index="B1"
               title="特征分布箱线图"

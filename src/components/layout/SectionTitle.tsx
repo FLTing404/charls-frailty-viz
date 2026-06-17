@@ -12,7 +12,7 @@ export function SectionTitle({ index, title, subtitle, align = 'left', className
   return (
     <div
       className={cn(
-        'flex flex-col gap-0.5',
+        'flex shrink-0 flex-col gap-0.5',
         align === 'center' && 'items-center text-center',
         className,
       )}

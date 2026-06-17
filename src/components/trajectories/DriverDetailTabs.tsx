@@ -32,13 +32,15 @@ export function DriverDetailTabs({
 }: DriverDetailTabsProps) {
   return (
     <Tabs value={detailTab} onValueChange={(v) => onTabChange(v as DetailTab)} className={className}>
-      <TabsList>
-        {TABS.map((tab) => (
-          <TabsTrigger key={tab} value={tab}>
-            {tDetailTab(tab)}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      <div className="-mx-1 overflow-x-auto">
+        <TabsList className="min-w-max px-1">
+          {TABS.map((tab) => (
+            <TabsTrigger key={tab} value={tab}>
+              {tDetailTab(tab)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
       <TabsContent value="sankey" className="min-h-[220px]">
         <DriverSankeyChart data={sankey} className="h-[220px]" />
       </TabsContent>
