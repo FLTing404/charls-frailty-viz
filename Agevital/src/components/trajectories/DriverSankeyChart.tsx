@@ -12,10 +12,10 @@ import { cn, formatNumber, formatPercent } from '@/lib/utils'
 echarts.use([SankeyChart, TooltipComponent, CanvasRenderer])
 
 const STATE_COLOR: Record<string, string> = {
-  robust: '#2EC4C4',
-  'pre-frail': '#E8B84A',
-  frail: '#D04FA8',
-  lost: '#8A8580',
+  robust: inkWash.bamboo,      // #5C7A6B — muted green, matches sunburst
+  'pre-frail': inkWash.amber,  // #C4A35A — muted amber, matches sunburst
+  frail: inkWash.cinnabar,     // #B83B3B — muted red, matches sunburst
+  lost: inkWash.wash,          // #8A8580 — grey
 }
 
 const STATE_LABEL: Record<string, string> = {
@@ -99,7 +99,8 @@ function LegacyDriverSankey({ data, className }: DriverSankeyChartProps) {
             name: n.name,
             label: { formatter: () => meta?.label ?? n.name },
             itemStyle: {
-              color: meta?.layerType === 'outcome' ? inkWash.cinnabar
+              color: meta?.layerType === 'outcome'
+                ? (STATE_COLOR[meta.state] ?? inkWash.cinnabar)
                 : meta?.state === 'high' ? inkWash.cinnabarDeep
                 : meta?.state === 'low' ? inkWash.bamboo : inkWash.indigo,
             },
@@ -121,7 +122,10 @@ function LegacyDriverSankey({ data, className }: DriverSankeyChartProps) {
     return () => { ro.disconnect(); chart.dispose() }
   }, [])
 
-  useEffect(() => { chartRef.current?.setOption(option ?? {}, true) }, [option])
+  useEffect(() => {
+    if (!chartRef.current) return
+    chartRef.current.setOption(option ?? {}, { notMerge: true, lazyUpdate: false })
+  }, [option])
 
   if (!data?.nodes.length) {
     return <div className={cn('flex items-center justify-center text-[10px] text-ink-stone', className)}>暂无桑基数据</div>
@@ -132,19 +136,45 @@ function LegacyDriverSankey({ data, className }: DriverSankeyChartProps) {
 /** New D3-based multi-wave temporal sankey */
 function TemporalDriverSankey({ data, className }: DriverSankeyChartProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const [{ w, h }, setSize] = useState({ w: 760, h: 400 })
+  // Start with 0 dimensions — SVG hidden until measured from real container
+  const [{ w, h }, setSize] = useState({ w: 0, h: 0 })
   const [hover, setHover] = useState<{ x: number; y: number; html: string } | null>(null)
   const uid = useMemo(() => `ds-${Math.random().toString(36).slice(2, 8)}`, [])
 
+  // Aggressive measurement on mount: sync + RAF chain + ResizeObserver
   useEffect(() => {
-    if (!containerRef.current) return
-    const obs = new ResizeObserver((entries) => {
-      for (const e of entries) {
-        setSize({ w: Math.max(420, e.contentRect.width), h: Math.max(300, e.contentRect.height) })
+    const el = containerRef.current
+    if (!el) return
+
+    let lastW = 0
+    let lastH = 0
+    const measure = () => {
+      if (!containerRef.current) return
+      const cw = containerRef.current.clientWidth
+      const ch = containerRef.current.clientHeight
+      if (cw > 0 && ch > 0 && (cw !== lastW || ch !== lastH)) {
+        lastW = cw
+        lastH = ch
+        setSize({ w: Math.max(420, cw), h: Math.max(300, ch) })
       }
+    }
+
+    // Sync measure (effect runs after browser paint — dom should be laid out)
+    measure()
+    // RAF chain: remeasure after 1st and 2nd animation frame
+    // Flex layout may need extra frames to fully resolve nested sizes
+    const r1 = requestAnimationFrame(() => {
+      measure()
+      requestAnimationFrame(measure)
     })
-    obs.observe(containerRef.current)
-    return () => obs.disconnect()
+
+    const obs = new ResizeObserver(() => measure())
+    obs.observe(el)
+
+    return () => {
+      cancelAnimationFrame(r1)
+      obs.disconnect()
+    }
   }, [])
 
   const layout = useMemo(() => {
@@ -186,24 +216,55 @@ function TemporalDriverSankey({ data, className }: DriverSankeyChartProps) {
     }
   }, [data, w, h])
 
-  if (!data?.nodes.length || !layout) {
-    return (
-      <div className={cn('flex items-center justify-center text-[10px] text-ink-stone', className)}>
-        暂无桑基数据
-      </div>
-    )
-  }
+  // Always render container so ResizeObserver can attach
+  const showEmpty = !data?.nodes.length || !layout
 
+  return (
+    <div ref={containerRef} className={cn('relative h-full min-h-[240px] w-full', className)}>
+      {showEmpty ? (
+        <div className="flex h-full items-center justify-center text-[10px] text-ink-stone">
+          暂无桑基数据
+        </div>
+      ) : (
+        <SankeySVG
+          layout={layout!}
+          w={w}
+          h={h}
+          uid={uid}
+          hover={hover}
+          setHover={setHover}
+        />
+      )}
+    </div>
+  )
+}
+
+/** Renders the D3 sankey SVG — separated so TS can narrow types */
+function SankeySVG({
+  layout,
+  w,
+  h,
+  uid,
+  hover,
+  setHover,
+}: {
+  layout: { nodes: TSNode[]; links: TSLink[]; layers: number[]; waveLabels: number[] }
+  w: number
+  h: number
+  uid: string
+  hover: { x: number; y: number; html: string } | null
+  setHover: (v: { x: number; y: number; html: string } | null) => void
+}) {
   const { nodes, links, waveLabels } = layout
   const layerXs = [...new Set(nodes.map((n) => n.layer))]
     .sort()
     .map((l) => {
       const layerNodes = nodes.filter((n) => n.layer === l)
-      return [l, (layerNodes[0]?.x0 ?? 0) + (layerNodes[0]?.x1 ?? 0) / 2 - (layerNodes[0]?.x0 ?? 0)] as const
+      return [l, ((layerNodes[0]?.x0 ?? 0) + (layerNodes[0]?.x1 ?? 0)) / 2] as const
     })
 
   return (
-    <div ref={containerRef} className={cn('relative h-full min-h-[240px] w-full', className)}>
+    <>
       <svg width={w} height={h} className="block">
         <defs>
           {links.map((link, i) => {
@@ -333,6 +394,6 @@ function TemporalDriverSankey({ data, className }: DriverSankeyChartProps) {
           style={{ left: hover.x, top: hover.y }}
           dangerouslySetInnerHTML={{ __html: hover.html }} />
       )}
-    </div>
+    </>
   )
 }

@@ -1,5 +1,7 @@
 import { useGlobalStore, type Wave } from '@/lib/store/globalStore'
-import { formatNumber } from '@/lib/utils'
+import { formatNumber, formatPercent } from '@/lib/utils'
+import { tProvince } from '@/lib/i18n/zh'
+import type { ProvinceDatum } from '@/types/data'
 
 const WAVES: Wave[] = [2011, 2013, 2015, 2018]
 
@@ -7,10 +9,26 @@ interface WaveSelectorProps {
   sampleN: number
   totalN: number
   sampled?: boolean
+  selectedProvince: string | null
+  provinces: ProvinceDatum[]
 }
 
-export function WaveSelector({ sampleN, totalN, sampled }: WaveSelectorProps) {
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[9px] text-ink-stone">{label}</span>
+      <span className="font-serif text-[11px] tabular-nums text-ink">{value}</span>
+    </div>
+  )
+}
+
+export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provinces }: WaveSelectorProps) {
   const { year, set } = useGlobalStore()
+
+  // Compute province stats
+  const sel = selectedProvince
+    ? provinces.find((p) => p.province === selectedProvince) ?? null
+    : null
 
   return (
     <div className="flex flex-col gap-3 p-2">
@@ -42,15 +60,64 @@ export function WaveSelector({ sampleN, totalN, sampled }: WaveSelectorProps) {
         </p>
       </div>
 
-      <div className="border-t border-ink/10 pt-2 text-[10px] leading-relaxed text-ink-stone">
-        <p className="mb-1 font-medium text-ink-wash">变量说明</p>
-        <ul className="space-y-0.5">
-          <li>ACE · 童年逆境总分</li>
-          <li>抑郁 · CES-D 10 项</li>
-          <li>睡眠 · 夜间时长(h)</li>
-          <li>社会联系 · 参与频率指数</li>
-          <li>FI · 衰弱指数</li>
-        </ul>
+      {/* Province stats — replaces 变量说明 */}
+      <div className="border-t border-ink/10 pt-2">
+        {sel ? (
+          <div className="space-y-0.5">
+            <p className="mb-1 font-serif text-[11px] font-semibold text-ink">
+              {tProvince(sel.province)}
+            </p>
+            <StatRow label="衰弱率" value={formatPercent(sel.frailRate, 1)} />
+            <StatRow label="衰弱前期" value={formatPercent(sel.preFrailRate, 1)} />
+            <StatRow label="样本量" value={`${sel.n.toLocaleString()} 人`} />
+            <StatRow
+              label="男性比"
+              value={sel.malePct != null ? formatPercent(sel.malePct, 1) : '—'}
+            />
+            <StatRow
+              label="城镇比"
+              value={sel.urbanPct != null ? formatPercent(sel.urbanPct, 1) : '—'}
+            />
+          </div>
+        ) : provinces.length > 0 ? (
+          (() => {
+            const totalN = provinces.reduce((s, p) => s + p.n, 0)
+            const avgFrail =
+              provinces.reduce((s, p) => s + p.frailRate * p.n, 0) / (totalN || 1)
+            const avgPreFrail =
+              provinces.reduce((s, p) => s + p.preFrailRate * p.n, 0) / (totalN || 1)
+            const maleProvinces = provinces.filter((p) => p.malePct != null)
+            const avgMale =
+              maleProvinces.length
+                ? maleProvinces.reduce((s, p) => s + p.malePct! * p.n, 0) /
+                  maleProvinces.reduce((s, p) => s + p.n, 0)
+                : null
+            const urbanProvinces = provinces.filter((p) => p.urbanPct != null)
+            const avgUrban =
+              urbanProvinces.length
+                ? urbanProvinces.reduce((s, p) => s + p.urbanPct! * p.n, 0) /
+                  urbanProvinces.reduce((s, p) => s + p.n, 0)
+                : null
+            return (
+              <div className="space-y-0.5">
+                <p className="mb-1 font-serif text-[9px] tracking-widest text-ink-stone">全国</p>
+                <StatRow label="衰弱率" value={formatPercent(avgFrail, 1)} />
+                <StatRow label="衰弱前期" value={formatPercent(avgPreFrail, 1)} />
+                <StatRow label="样本量" value={`${totalN.toLocaleString()} 人`} />
+                <StatRow
+                  label="男性比"
+                  value={avgMale != null ? formatPercent(avgMale, 1) : '—'}
+                />
+                <StatRow
+                  label="城镇比"
+                  value={avgUrban != null ? formatPercent(avgUrban, 1) : '—'}
+                />
+              </div>
+            )
+          })()
+        ) : (
+          <p className="text-[9px] text-ink-stone">加载中…</p>
+        )}
       </div>
     </div>
   )

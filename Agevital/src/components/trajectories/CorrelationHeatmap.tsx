@@ -132,7 +132,8 @@ export function CorrelationHeatmap({
   }, [data, onCellClick])
 
   useEffect(() => {
-    chartRef.current?.setOption(option ?? {}, true)
+    if (!chartRef.current) return
+    chartRef.current.setOption(option ?? {}, { notMerge: true, lazyUpdate: false })
   }, [option])
 
   return (

@@ -138,7 +138,8 @@ export function DriverScatterBubble({
   }, [])
 
   useEffect(() => {
-    chartRef.current?.setOption(option, true)
+    if (!chartRef.current) return
+    chartRef.current.setOption(option, { notMerge: true, lazyUpdate: false })
   }, [option])
 
   return <div ref={ref} className={className} style={{ width: '100%', height: '100%', minHeight: 220 }} />

@@ -8,8 +8,8 @@ import { tProvince } from '@/lib/i18n/zh'
 import { formatPercent } from '@/lib/utils'
 
 export const CHINA_VIEW = {
-  center: [108, 36] as [number, number],
-  zoom: 1.75,
+  center: [105, 36] as [number, number],
+  zoom: 1.35,
 }
 
 const KEEP_FILL_ON_HOVER = {

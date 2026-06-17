@@ -88,6 +88,11 @@ export function TrajectoriesPage() {
     return () => { aborted = true }
   }, [year, resetBrush, setTrajectory])
 
+  // Reset brush when province changes
+  useEffect(() => {
+    resetBrush()
+  }, [province, resetBrush])
+
   // Province filter: from global store (set by Page 1 click or local map click)
   const handleProvinceClick = useCallback(
     (p: string | null) => set({ province: p }),
@@ -182,7 +187,13 @@ export function TrajectoriesPage() {
         {/* Left: Province map + wave selector */}
         <aside className="col-span-12 flex min-h-0 flex-col gap-2 lg:col-span-4">
           <InkBorder className="panel shrink-0 p-2">
-            <WaveSelector sampleN={provinceFilteredRecords.length} totalN={totalN} sampled={sampled} />
+            <WaveSelector
+              sampleN={provinceFilteredRecords.length}
+              totalN={totalN}
+              sampled={sampled}
+              selectedProvince={province}
+              provinces={provinces}
+            />
           </InkBorder>
           <InkBorder className="panel flex min-h-0 flex-1 flex-col p-2">
             <SectionTitle index="L1" title="省份分布" subtitle="点击省份筛选数据 · 再次点击取消" />
@@ -201,7 +212,7 @@ export function TrajectoriesPage() {
         <section className="col-span-12 flex min-h-0 flex-col gap-2 lg:col-span-8">
 
           {/* Row 1: Correlation heatmap + Parallel coordinates */}
-          <div className="grid min-h-0 flex-1 grid-cols-12 gap-2">
+          <div className="grid min-h-0 grid-cols-12 gap-2" style={{ flex: '1 1 45%' }}>
             <InkBorder className="panel col-span-12 flex min-h-0 flex-col p-2 md:col-span-4">
               <SectionTitle
                 index="R1"
@@ -229,6 +240,7 @@ export function TrajectoriesPage() {
               <div className="min-h-0 flex-1">
                 {provinceFilteredRecords.length > 0 ? (
                   <ParallelCoordinatesChart
+                    key={province ?? 'all'}
                     records={provinceFilteredRecords}
                     focusDimension={focusDimension}
                     brushedIds={brushedIds}
@@ -246,7 +258,7 @@ export function TrajectoriesPage() {
           </div>
 
           {/* Row 2: B1 wider, B2 square */}
-          <div className="flex shrink-0 gap-2" style={{ height: '240px' }}>
+          <div className="flex gap-2" style={{ flex: '0 0 340px' }}>
             <InkBorder className="panel flex min-w-0 flex-1 flex-col p-2">
               <SectionTitle index="B1" title="流向 · 分布" subtitle="桑基图 / 散点气泡图切换" />
               <div className="ink-divider my-1" />
@@ -258,7 +270,7 @@ export function TrajectoriesPage() {
               />
             </InkBorder>
 
-            <InkBorder className="panel flex h-full w-[240px] shrink-0 flex-col p-2">
+            <InkBorder className="panel flex h-full w-[340px] shrink-0 flex-col p-2">
               <SectionTitle index="B2" title="构成 · 关联" subtitle="旭日图 / 和弦图切换" />
               <div className="ink-divider my-1" />
               <SunburstChordPanel

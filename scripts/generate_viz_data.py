@@ -199,27 +199,49 @@ for wave in [2011, 2013, 2015, 2018]:
     socc['social_score'] = socc[activity_cols].apply(
         pd.to_numeric, errors='coerce').gt(0).sum(axis=1)
 
-    # Load ACE (static)
+    # Load ACE (static, CSV format)
     try:
-        ace_path = DATA_JSON / 'charls_ace/charls_ace_after_pca.json'
-        ace_raw = pd.DataFrame(json.loads(ace_path.read_text()))
-        ace_raw['ID'] = pd.to_numeric(ace_raw['ID'], errors='coerce').astype('Int64')
-        ACE = dict(zip(ace_raw['ID'].dropna().astype(int),
+        ace_csv = DATA / 'charls_ace/charls_ace_after_pca.csv'
+        ace_raw = pd.read_csv(ace_csv)
+        ace_raw['_id_int'] = pd.to_numeric(ace_raw['ID'], errors='coerce').astype('Int64')
+        ACE = dict(zip(ace_raw['_id_int'].dropna().astype(int),
                        pd.to_numeric(ace_raw['ace_sum'], errors='coerce')))
     except Exception:
-        ACE = {}
+        # Fallback: try JSON
+        try:
+            ace_path = DATA_JSON / 'charls_ace/charls_ace_after_pca.json'
+            ace_raw = pd.DataFrame(json.loads(ace_path.read_text()))
+            ace_raw['_id_int'] = pd.to_numeric(ace_raw['ID'], errors='coerce').astype('Int64')
+            ACE = dict(zip(ace_raw['_id_int'].dropna().astype(int),
+                           pd.to_numeric(ace_raw['ace_sum'], errors='coerce')))
+        except Exception:
+            ACE = {}
 
     # ── Merge base frame: SES as anchor (has province + city) ──
-    base_cols = ['ID', 'communityID', 'province', 'city', 'city_cn', 'raeducl', 'atotb', 'lbrf_c', 'hukou']
+    base_cols = ['ID', 'householdID', 'communityID', 'province', 'city', 'city_cn', 'raeducl', 'atotb', 'lbrf_c', 'hukou']
     base = ses[[c for c in base_cols if c in ses.columns]].copy()
+    # Normalize ID: create int column for cross-source matching
+    base['_id_int'] = pd.to_numeric(base['ID'], errors='coerce').astype('Int64')
+
+    # Merge frailty (ID is 12-digit string, matches base['ID'] directly)
     base = base.merge(frailty[['ID', 'FI', 'frailty_cat', 'frailty'] + actual_deficit_cols],
                       on='ID', how='left')
-    base = base.merge(sleep, on='ID', how='left')
-    base = base.merge(socc[['ID', 'social_score'] + activity_cols], on='ID', how='left')
-    base['gender_demo'] = base['ID'].map(DEMO_GENDER)  # 1=male 2=female from demo
-    base['ace'] = base['ID'].map(ACE)
 
-    # ── Merge healthcare utilization ──
+    # Merge sleep: sleep has integer IDs, normalize to match
+    sleep['_id_int'] = pd.to_numeric(sleep['ID'], errors='coerce').astype('Int64')
+    base = base.merge(sleep.drop(columns=['ID']), on='_id_int', how='left')
+
+    # Fix social_score: count activities with ANY participation (value < 4, i.e., 1=almost daily, 2=weekly, 3=monthly)
+    socc['social_score'] = socc[activity_cols].apply(
+        lambda row: (pd.to_numeric(row, errors='coerce') < 4).sum(), axis=1)
+    # Merge socc: socc has integer IDs
+    socc['_id_int'] = pd.to_numeric(socc['ID'], errors='coerce').astype('Int64')
+    base = base.merge(socc[['_id_int', 'social_score'] + activity_cols], on='_id_int', how='left')
+
+    base['gender_demo'] = base['_id_int'].map(DEMO_GENDER)  # 1=male 2=female from demo
+    base['ace'] = base['_id_int'].map(ACE)
+
+    # ── Merge healthcare utilization (ID matches base string ID) ──
     try:
         hs_path = DATA / f'charls_healthcare_system/hs_{wave}.csv'
         hs = pd.read_csv(hs_path)
@@ -229,11 +251,12 @@ for wave in [2011, 2013, 2015, 2018]:
         base['hipriv'] = None
         base['usualcare'] = None
 
-    # ── Merge material circumstances (on householdID) ──
+    # ── Merge material circumstances (on householdID, string format) ──
     try:
         mc_path = DATA / f'charls_material_circumstances/mc_{wave}.csv'
         mc = pd.read_csv(mc_path)
-        mc_hh = mc.dropna(subset=['householdID']).groupby('householdID').first().reset_index()
+        mc = mc.dropna(subset=['householdID'])
+        mc_hh = mc.groupby('householdID').first().reset_index()
         mc_cols = ['householdID', 'runwater', 'shower', 'gas', 'heat', 'cleancook',
                    'telephone', 'internet', 'toiletseat']
         base = base.merge(mc_hh[[c for c in mc_cols if c in mc_hh.columns]],
@@ -242,17 +265,15 @@ for wave in [2011, 2013, 2015, 2018]:
         for c in ['runwater','shower','gas','heat','cleancook','telephone','internet','toiletseat']:
             base[c] = None
 
-    # ── Merge SC Constructed Z-scores (ID format: 9-digit integer) ──
+    # ── Merge SC Constructed Z-scores (uses _id_int for matching) ──
     try:
         sc_path = DATA / 'charls_social_participation_by_wave/CHARLS_SC_constructed.csv'
         sc_const = pd.read_csv(sc_path)
         sc_id_col = 'id' if 'id' in sc_const.columns else 'ID'
-        sc_const['sc_id_int'] = pd.to_numeric(sc_const[sc_id_col], errors='coerce').astype('Int64')
-        SC_Z_TOTAL = dict(zip(sc_const['sc_id_int'].dropna().astype(int),
+        sc_const['_sc_id_int'] = pd.to_numeric(sc_const[sc_id_col], errors='coerce').astype('Int64')
+        SC_Z_TOTAL = dict(zip(sc_const['_sc_id_int'].dropna().astype(int),
                               pd.to_numeric(sc_const['Z_SC_Total'], errors='coerce')))
-        # Convert SES 12-digit string ID → 11-digit integer for matching
-        base['sc_id'] = pd.to_numeric(base['ID'], errors='coerce').astype('Int64')
-        base['scap'] = base['sc_id'].map(SC_Z_TOTAL)
+        base['scap'] = base['_id_int'].map(SC_Z_TOTAL)
     except Exception:
         base['scap'] = None
 
@@ -501,10 +522,12 @@ for wave in [2011, 2013, 2015, 2018]:
     recs_df = base[[c for c in recs_base_cols if c in base.columns]].copy()
     recs_df = recs_df.dropna(subset=['FI', 'frailty_cat'])
 
-    # Compute "alone" proxy from social data (hhres in socc)
+    # Compute "alone" proxy from social data (hhres in socc), using int IDs
     if 'hhres' in socc.columns:
-        hhres = dict(zip(socc['ID'], socc['hhres']))
-        recs_df['alone'] = recs_df['ID'].map(hhres).apply(
+        socc['_socc_id_int'] = pd.to_numeric(socc['ID'], errors='coerce').astype('Int64')
+        hhres = dict(zip(socc['_socc_id_int'].dropna().astype(int), socc['hhres']))
+        recs_df['_recs_id_int'] = pd.to_numeric(recs_df['ID'], errors='coerce').astype('Int64')
+        recs_df['alone'] = recs_df['_recs_id_int'].map(hhres).apply(
             lambda x: 1 if pd.notna(x) and x <= 1 else 0)
     else:
         recs_df['alone'] = 0
