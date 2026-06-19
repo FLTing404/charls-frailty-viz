@@ -43,7 +43,7 @@ export function buildDeficitNetworkOption(data: DeficitNetworkPayload): EChartsC
     },
     label: {
       show: n.n >= maxN * 0.08,
-      fontSize: 8,
+      fontSize: 14,
       fontFamily: '"Noto Serif SC", serif',
       color: inkWash.ink,
       fontWeight: 400,
@@ -85,7 +85,7 @@ export function buildDeficitNetworkOption(data: DeficitNetworkPayload): EChartsC
       textStyle: {
         color: inkWash.ink,
         fontFamily: '"Noto Serif SC", serif',
-        fontSize: 8,
+        fontSize: 13,
       },
       formatter: (p: any) => {
         if (p.dataType === 'edge') {
@@ -115,7 +115,7 @@ export function buildDeficitNetworkOption(data: DeficitNetworkPayload): EChartsC
       left: 'center',
       itemWidth: 12,
       itemHeight: 12,
-      textStyle: { fontSize: 8, color: inkWash.wash, fontFamily: '"Noto Serif SC", serif' },
+      textStyle: { fontSize: 13, color: inkWash.wash, fontFamily: '"Noto Serif SC", serif' },
       data: categories.map((c) => c.name),
     },
     series: [
@@ -144,7 +144,7 @@ export function buildDeficitNetworkOption(data: DeficitNetworkPayload): EChartsC
           },
           label: {
             show: true,
-            fontSize: 13,
+            fontSize: 16,
             fontFamily: '"Noto Serif SC", serif',
             color: inkWash.cinnabar,
             fontWeight: 700,

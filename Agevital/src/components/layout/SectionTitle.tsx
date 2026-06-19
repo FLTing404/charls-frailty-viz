@@ -16,11 +16,11 @@ export function SectionTitle({ title, subtitle, align = 'left', className }: Sec
         className,
       )}
     >
-      <h3 className="font-serif text-[10px] font-semibold tracking-wide text-ink">
+      <h3 className="font-serif text-[10px] lg:text-xs font-semibold tracking-wide text-ink">
         {title}
       </h3>
       {subtitle && (
-        <p className="text-[8px] tracking-wide text-ink-wash">
+        <p className="text-[8px] lg:text-[10px] tracking-wide text-ink-wash">
           {subtitle}
         </p>
       )}

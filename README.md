@@ -1,8 +1,24 @@
-# AgeVital
+# 龄健 AgeVital
 
-**中国中老年人衰弱状态及驱动因素可视化分析**
+**中国中老年人衰弱状态及多维驱动因素可视分析系统**
 
-浙江大学 · 数据可视化导论 · CHARLS 2011–2018
+浙江大学 · 数据可视化导论 · 课程大作业 · CHARLS 2011–2018
+
+---
+
+## 项目简介
+
+AgeVital 基于 CHARLS 2011–2018 四波次纵向队列数据，集成 10+ 可视化视图与 AI 异常检测 / 智能问答，支持从空间格局、个体轨迹、因素关联、人口构成四个层面交互式探索中国老年衰弱现象。
+
+**系统截图**
+
+|              空间分布概览              |               驱动关联概览               |
+| :-------------------------------------: | :---------------------------------------: |
+| ![空间分布概览](figures/空间分布概览.png) | ![驱动关联概览](figures/驱动关联概览-1.png) |
+
+|              共病网络叠加              |         AI 智能问答         |
+| :-------------------------------------: | :-------------------------: |
+| ![慢性病关节炎](figures/慢性病关节炎.png) | ![AI回答](figures/AI回答.png) |
 
 ---
 
@@ -10,92 +26,11 @@
 
 ### 前置要求
 
-| 工具 | 版本 |
-|------|------|
-| Node.js | ≥ 18 |
-| Python | ≥ 3.10 |
-| pip 包 | pandas · numpy · scipy · pyreadstat |
+- Node.js ≥ 18
 
-```bash
-pip install pandas numpy scipy pyreadstat
-```
+> 可视化数据（44 个 JSON）和地图 GeoJSON 已包含在仓库中，无需额外下载或生成。
 
----
-
-### 第一步：准备原始数据
-
-原始 CHARLS 数据需从 [charls.pku.edu.cn](https://charls.pku.edu.cn) 申请获取，放置在以下目录（相对于项目根目录）：
-
-```
-data/
-├── charls_ace/
-│   └── charls_ace_after_pca.csv       ← 童年逆境指数（已预处理）
-├── charls_frailty/
-│   ├── charls_frailty_2011.csv
-│   ├── charls_frailty_2013.csv
-│   ├── charls_frailty_2015.csv
-│   └── charls_frailty_2018.csv
-├── charls_socialeconomic_status/
-│   ├── ses_2011.csv  ses_2013.csv  ses_2015.csv  ses_2018.csv
-├── charls_sleep_by_wave/
-│   ├── sleep_2011_all_variables.csv  ...（四波次）
-└── charls_social_participation_by_wave/
-    ├── socc_2011.csv  socc_2013.csv  socc_2015.csv  socc_2018.csv
-```
-
-> 请勿将含个人标识的原始数据提交至公开仓库。
-
----
-
-### 第二步：生成可视化数据
-
-在项目根目录运行：
-
-```bash
-python scripts/generate_viz_data.py
-```
-
-脚本输出 44 个 JSON 文件到 `Agevital/public/data/`，每个调查波次（2011/2013/2015/2018）11 个：
-
-| 文件 | 内容 |
-|------|------|
-| `map_province_{year}.json` | 28 省份衰弱率、衰弱前期率、样本量、男性比、城镇比 |
-| `map_city_{year}.json` | 城市级衰弱率统计（含 GPS 坐标，用于气泡定位） |
-| `deficit_network_{year}.json` | 26 项缺陷共病力导向图（节点 + 边） |
-| `deficit_province_{year}.json` | 各省各缺陷患病率 |
-| `deficit_city_{year}.json` | 各城市各缺陷患病率（含 GPS 坐标，用于地图气泡叠加） |
-| `driver_records_{year}.json` | 个体级五维驱动因素记录（含省份 + 城市字段） |
-| `correlation_matrix_{year}.json` | ACE / 睡眠 / 社会联系 / 抑郁 / FI 的 Spearman ρ 矩阵 |
-| `driver_chord_{year}.json` | 驱动因素关联强度（和弦图格式） |
-| `driver_sankey_{year}.json` | ACE 分组 → 衰弱状态流向（桑基格式） |
-| `factor_matrix_{year}.json` | 各因素与 FI 的 Spearman ρ |
-| `kpi_{year}.json` | 全国整体衰弱率、样本量等摘要指标 |
-
----
-
-### 第三步：放置地图 GeoJSON
-
-地图需要两个文件，手动放到 `Agevital/public/geo/`：
-
-```bash
-mkdir -p Agevital/public/geo
-
-# 中国省级行政区划
-curl -L -o Agevital/public/geo/china-provinces.json \
-  "https://raw.githubusercontent.com/apache/echarts/master/test/data/map/json/china.json"
-
-# 世界地图（背景底图）
-curl -L -o Agevital/public/geo/world.json \
-  "https://raw.githubusercontent.com/apache/echarts/master/test/data/map/json/world.json"
-```
-
-如网络受限，从 [ECharts 地图下载页](https://echarts.apache.org/zh/download-map.html) 手动下载后重命名放入即可。
-
-放置完成后确认可访问：`http://localhost:5173/geo/china-provinces.json`
-
----
-
-### 第四步：安装前端依赖并启动
+### 安装与启动
 
 ```bash
 cd Agevital
@@ -103,134 +38,77 @@ npm install
 npm run dev
 ```
 
-浏览器打开：
+浏览器打开 http://localhost:5173 即可使用：
 
-- **快照页（空间分布）**：http://localhost:5173/snapshot
-- **轨迹页（多维分析）**：http://localhost:5173/trajectories
-
-首页自动重定向到 `/trajectories`。
+- **快照页** `/snapshot` — 衰弱空间分布 + 共病网络
+- **轨迹页** `/trajectories` — 多维驱动因素分析
 
 ---
 
-### 生产构建
+### 开启 AI 分析功能（可选）
 
-```bash
-cd Agevital
-npm run build    # 类型检查 + 打包到 dist/
-npm run preview  # 本地预览构建产物
+系统内置 AI 异常检测和智能问答功能，需要 DeepSeek API Key 才能使用。不配置也不影响其他功能正常运行（AI 面板会显示预设的离线分析结果）。
+
+1. 在 [platform.deepseek.com](https://platform.deepseek.com) 注册并获取 API Key
+2. 在 `Agevital/` 目录下创建 `.env` 文件：
+
 ```
+DEEPSEEK_API_KEY=sk-你的密钥
+```
+
+3. 重启 `npm run dev`，Vite 会自动读取密钥并代理请求到 DeepSeek API
+
+> AI 功能在轨迹页左侧「发现面板」和快照页底部的「智能问答」入口使用。点击聊天气泡图标即可打开问答界面，系统会基于当前数据上下文 + CHARLS 文献知识库回答问题。
 
 ---
 
-## 页面说明
+## 页面功能
 
-### 快照页 `/snapshot` — 衰弱空间分布
+### 快照页 `/snapshot`
 
-| 区域 | 功能 |
-|------|------|
-| **中国 choropleth 地图** | 颜色深浅反映各省衰弱率；悬停显示省份名、衰弱率、FI 值；**点击省份 → 跳转轨迹页并自动筛选** |
-| **共病力导向图（右侧浮层）** | 26 项衰弱缺陷构成的共病网络；节点大小 = 患病率，边粗细 = 共现程度；**图例点击可筛选类别**（如只看慢性病）；**点击节点 → 地图叠加气泡** |
-| **地图气泡叠加** | 点击共病节点后，地图上各**城市**出现气泡，气泡大小 = 该城市该缺陷的患病率；地图本身仍显示衰弱率不变 |
-| **顶部年份选择器** | 切换 2011 / 2013 / 2015 / 2018，地图与力图同步更新 |
+| 区域           | 功能                                                       |
+| -------------- | ---------------------------------------------------------- |
+| 中国地图       | 颜色深浅反映各省衰弱率；点击省份跳转轨迹页并自动筛选       |
+| 左侧排名柱状图 | 按衰弱率降序排列；点击共病网络节点后切换为该缺陷患病率排名 |
+| 共病力导向图   | 26 项衰弱缺陷的共病网络；点击节点 → 地图叠加城市气泡      |
+| 顶部年份选择器 | 切换 2011 / 2013 / 2015 / 2018                             |
 
-### 轨迹页 `/trajectories` — 多维驱动因素分析
+### 轨迹页 `/trajectories`
 
-| 区域 | 功能 |
-|------|------|
-| **左侧 省份地图** | 点击省份设置筛选范围；悬停 tooltip 显示衰弱率 / 样本量 / 男女比 / 城乡比 |
-| **左侧 统计卡** | 实时显示当前范围（全国或选定省份）的五项摘要指标 |
-| **右上 相关性热力图** | 点击方格设置聚焦变量，平行坐标图对应轴高亮 |
-| **右上 平行坐标图** | 个体级五维轨迹；在轴上拖拽框选子群，刷选结果传递到下方图表 |
-| **右下 Panel B1** | **[桑基图]** ACE 分组 → 衰弱状态流向 ｜ **[散点/气泡]** 抑郁×ACE，气泡=FI 衰弱指数 |
-| **右下 Panel B2** | **[旭日图]** 衰弱状态 → 性别 → 城乡三层构成 ｜ **[和弦图]** 五项驱动因素间关联强度 |
-
-**跨页面联动：**
-
-```
-快照页 点击省份
-  → 设置全局 province 筛选
-  → 跳转 /trajectories?province=Sichuan
-  → 轨迹页读取 URL 参数，所有图表自动过滤该省数据
-  → 左侧地图高亮选中省份，顶部显示范围 badge
-  → 点击 badge 上的 × 清除筛选，恢复全国视图
-```
-
----
-
-## 项目结构
-
-```
-.
-├── data/                              # 原始 CHARLS 数据（需自行获取）
-├── scripts/
-│   └── generate_viz_data.py           # 数据处理脚本 → Agevital/public/data/
-└── Agevital/
-    ├── public/
-    │   ├── data/                      # 生成的可视化 JSON（44 个文件，含城市级数据）
-    │   ├── geo/                       # 地图 GeoJSON（需手动放置）
-    │   └── textures/                  # SVG 纹理（纸张、印章）
-    └── src/
-        ├── App.tsx                    # 路由入口（/ → /trajectories, /snapshot）
-        ├── main.tsx                   # React 入口
-        ├── pages/
-        │   ├── SnapshotPage.tsx       # 快照页：地图 + 共病力图 + 气泡叠加
-        │   └── TrajectoriesPage.tsx   # 轨迹页：多维分析
-        ├── components/
-        │   ├── charts/                # ECharts 封装（中国地图、力导向图、旭日图）
-        │   ├── layout/                # 布局组件（Header、PageShell、InkBorder）
-        │   ├── snapshot/              # 快照页组件（TopBar、SnapshotGeoStage）
-        │   ├── trajectories/          # 轨迹页组件（热力图、平行坐标、桑基、和弦等）
-        │   └── ui/                    # shadcn/ui 基础组件（Badge、Button、Tooltip）
-        ├── lib/
-        │   ├── store/                 # Zustand 全局状态（globalStore + trajectoryStore）
-        │   ├── data/                  # JSON 加载器 + driver records 解析
-        │   ├── charts/                # ECharts option 构建函数
-        │   ├── geo/                   # 省份名称映射 & GPS 坐标
-        │   ├── theme/                 # ink-wash 水墨色彩系统
-        │   └── i18n/                  # 中文字符串
-        └── types/
-            └── data.d.ts              # 全部 TypeScript 类型定义
-```
+| 区域                | 功能                                           |
+| ------------------- | ---------------------------------------------- |
+| 左侧地图 + 统计卡   | 点击省份筛选；统计卡显示当前范围摘要           |
+| 发现面板 / 智能问答 | AI 异常分析 + 基于 CHARLS 文献的智能问答       |
+| 相关性热力图        | Spearman ρ 矩阵，点击单元格设焦点变量         |
+| 平行坐标图          | 个体级十维驱动因素；拖拽框选子群，联动下方图表 |
+| 桑基图 / 气泡图     | 衰弱状态跨波次流转 / 驱动因素散点              |
+| 旭日图 / 和弦图     | 人口构成分布 / 驱动因素间关联强度              |
 
 ---
 
 ## 技术栈
 
-| 层级 | 技术 |
-|------|------|
-| 前端框架 | Vite 5 + React 18 + TypeScript |
-| 路由 | React Router v6 |
-| 样式 | Tailwind CSS + shadcn/ui + ink-wash 水墨主题 |
-| 图表 | ECharts 5（地图 / 力导向 / 旭日 / 桑基 / 和弦 / 平行坐标） |
-| 状态管理 | Zustand（province 省份筛选 + 平行坐标刷选 ID 同步） |
-| 数据处理 | Python · pandas · scipy（Spearman ρ 计算）· pyreadstat（读取 .dta） |
+| 层级     | 技术                                                                              |
+| -------- | --------------------------------------------------------------------------------- |
+| 前端框架 | Vite 5 + React 18 + TypeScript                                                    |
+| 样式     | Tailwind CSS 3 + shadcn/ui + 水墨主题                                             |
+| 图表     | ECharts 5（地图 / 力导向 / 旭日 / 桑基 / 和弦 / 平行坐标 / 热力图 / 散点 / 柱状） |
+| 状态管理 | Zustand                                                                           |
+| AI       | DeepSeek API + 预设离线分析 + CHARLS 文献 RAG                                     |
+| 数据处理 | Python 3 · pandas · scipy · pyreadstat（仅数据预处理阶段需要）                 |
 
 ---
 
 ## 常见问题
 
-**地图空白 / 加载失败**
-检查 `Agevital/public/geo/` 目录是否存在 `china-provinces.json` 和 `world.json`，可直接访问 `http://localhost:5173/geo/china-provinces.json` 验证。
+**省份点击后轨迹页无数据**
 
-**数据全部 404**
-先运行 `python scripts/generate_viz_data.py`，确认 `Agevital/public/data/` 下有 44 个 `.json` 文件。
-
-**省份点击后第二页无数据**
-检查 `driver_records_{year}.json` 的 `fields` 数组中是否包含 `"province"`。若无，重新运行数据脚本。
-
-**Python 报 `No module named 'pyreadstat'`**
-运行 `pip install pyreadstat`（用于读取 `.dta` 格式 Stata 文件）。
-
-**Python 报 `No module named 'scipy'`**
-运行 `pip install scipy`（用于 Spearman 相关系数计算）。
+检查 `Agevital/public/data/` 下的 `driver_records_{year}.json` 是否完整。
 
 ---
 
 ## 数据来源
 
-CHARLS（中国健康与养老追踪调查）2011–2018，由北京大学国家发展研究院管理。  
-申请地址：[charls.pku.edu.cn](https://charls.pku.edu.cn)
-
-衰弱指数基于 26 项缺陷累积模型（Deficit Accumulation Frailty Index）。
+CHARLS（中国健康与养老追踪调查）2011–2018，北京大学国家发展研究院。申请地址：[charls.pku.edu.cn](https://charls.pku.edu.cn)
 
 > 本项目为课程作业，代码仅供学术参考，请勿将 CHARLS 原始微观数据公开分发。

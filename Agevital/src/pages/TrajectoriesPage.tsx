@@ -233,7 +233,7 @@ export function TrajectoriesPage() {
   return (
     <PageShell
       title={
-        <h1 className="font-serif text-xs font-semibold tracking-wide text-ink">
+        <h1 className="font-serif text-xs lg:text-base font-semibold tracking-wide text-ink">
           驱动因素与衰弱关联
         </h1>
       }
@@ -245,11 +245,11 @@ export function TrajectoriesPage() {
       )}
 
       {/* ── Main 3-column grid ─────────────────────────────────────────────── */}
-      <div className="grid h-full min-h-0 grid-cols-12 gap-0.5 pb-1">
+      <div className="grid h-full min-h-0 grid-cols-12 gap-0.5 lg:gap-1.5 pb-1">
 
         {/* Left: Province map + wave selector */}
-        <aside className="col-span-12 flex min-h-0 flex-col gap-0.5 lg:col-span-4">
-          <InkBorder className="panel flex min-h-0 flex-col p-1" style={{ flex: 3 }}>
+        <aside className="col-span-12 flex min-h-0 flex-col gap-0.5 lg:gap-1.5 lg:col-span-4">
+          <InkBorder className="panel flex min-h-0 flex-col p-1 lg:p-2" style={{ flex: 3 }}>
             <WaveSelector
               sampleN={provinceFilteredRecords.length}
               totalN={totalN}
@@ -259,7 +259,7 @@ export function TrajectoriesPage() {
               prevProvinces={prevProvinces}
             />
           </InkBorder>
-          <InkBorder className="panel flex min-h-0 flex-col p-1" style={{ flex: 7 }}>
+          <InkBorder className="panel flex min-h-0 flex-col p-1 lg:p-2" style={{ flex: 7 }}>
             <SectionTitle title="省份分布" />
             <div className="ink-divider my-0" />
             <div className="min-h-0 flex-1">
@@ -273,10 +273,10 @@ export function TrajectoriesPage() {
         </aside>
 
         {/* Right: Analysis panels */}
-        <section className="col-span-12 flex min-h-0 flex-col gap-0.5 lg:col-span-8">
+        <section className="col-span-12 flex min-h-0 flex-col gap-0.5 lg:gap-1.5 lg:col-span-8">
 
           {/* Row 1: Correlation heatmap + Parallel coordinates (3/5 height) */}
-          <div className="grid min-h-0 grid-cols-12 gap-1" style={{ flex: 3 }}>
+          <div className="grid min-h-0 grid-cols-12 gap-1 lg:p-2" style={{ flex: 3 }}>
             <InkBorder className="panel col-span-12 flex min-h-0 flex-col p-1.5 md:col-span-4">
               <SectionTitle title="相关性热力图" />
               <div className="ink-divider my-0" />
@@ -314,8 +314,8 @@ export function TrajectoriesPage() {
           </div>
 
           {/* Row 2: B2 left, B1 right (2/5 height) */}
-          <div className="flex gap-1" style={{ flex: 2 }}>
-            <InkBorder className="panel flex h-full w-[clamp(170px,20%,280px)] shrink-0 flex-col p-1">
+          <div className="flex gap-1 lg:p-2" style={{ flex: 2 }}>
+            <InkBorder className="panel flex h-full w-[clamp(170px,20%,280px)] shrink-0 flex-col p-1 lg:p-2">
               <SectionTitle title="构成 · 关联" />
               <div className="ink-divider my-0" />
               <SunburstChordPanel
@@ -325,7 +325,7 @@ export function TrajectoriesPage() {
               />
             </InkBorder>
 
-            <InkBorder className="panel flex min-w-0 flex-1 flex-col p-1">
+            <InkBorder className="panel flex min-w-0 flex-1 flex-col p-1 lg:p-2">
               <SectionTitle title="流向 · 分布" />
               <div className="ink-divider my-0" />
               <SankeyScatterPanel

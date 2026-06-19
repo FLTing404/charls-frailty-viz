@@ -9,7 +9,7 @@ export function TopBar() {
 
   return (
     <div className="flex shrink-0 items-center justify-end gap-2 border-y border-ink/15 bg-paper-alt/70 px-2 py-1">
-      <span className="font-serif text-[8px] tracking-wide text-ink-wash">调查年份</span>
+      <span className="font-serif text-[8px] lg:text-[10px] tracking-wide text-ink-wash">调查年份</span>
 
       {/* Slider track */}
       <div className="flex flex-col gap-0.5">
@@ -20,10 +20,10 @@ export function TopBar() {
           step={1}
           value={idx}
           onChange={(e) => set({ year: WAVES[Number(e.target.value)] })}
-          className="wave-slider h-[3px] w-[120px] cursor-pointer appearance-none rounded-full bg-ink/15 accent-cinnabar"
+          className="wave-slider h-[3px] w-[120px] lg:w-[160px] cursor-pointer appearance-none rounded-full bg-ink/15 accent-cinnabar"
         />
         {/* Tick labels */}
-        <div className="flex w-[120px] justify-between px-px">
+        <div className="flex w-[120px] lg:w-[160px] justify-between px-px">
           {WAVES.map((w) => (
             <button
               key={w}
@@ -41,7 +41,7 @@ export function TopBar() {
       </div>
 
       {/* Current year badge */}
-      <span className="min-w-[2.5rem] font-serif text-[11px] font-semibold text-cinnabar">{year}</span>
+      <span className="min-w-[2.5rem] font-serif text-[11px] lg:text-sm font-semibold text-cinnabar">{year}</span>
     </div>
   )
 }

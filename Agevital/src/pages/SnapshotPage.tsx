@@ -49,7 +49,7 @@ export function SnapshotPage() {
   return (
     <PageShell
       title={
-        <h1 className="font-serif text-xs font-semibold tracking-wide text-ink">
+        <h1 className="font-serif text-xs lg:text-base font-semibold tracking-wide text-ink">
           衰弱空间分布 · {year}
         </h1>
       }

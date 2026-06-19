@@ -85,7 +85,7 @@ export function SnapshotGeoStage({
 
       {/* Left sidebar: province ranking bar chart */}
       {provinces.length > 0 && (
-        <aside className="pointer-events-none absolute inset-y-1 left-1 z-10 flex w-[clamp(200px,24%,300px)] flex-col">
+        <aside className="pointer-events-none absolute inset-y-1 left-1 z-10 flex w-[clamp(400px,48%,600px)] flex-col">
           <div className="pointer-events-auto flex min-h-0 flex-1 flex-col rounded-sm border border-ink/10 bg-paper-alt/78 backdrop-blur-[2px]">
             <ProvinceRankBar
               key={selectedDeficit ?? 'frail'}
@@ -99,7 +99,7 @@ export function SnapshotGeoStage({
       )}
 
       {deficitNetwork && (
-        <aside className="pointer-events-none absolute inset-y-1 right-1 z-10 flex w-[clamp(240px,28%,360px)] flex-col">
+        <aside className="pointer-events-none absolute inset-y-1 right-1 z-10 flex w-[clamp(420px,49%,630px)] flex-col">
           <div className="pointer-events-auto flex min-h-0 flex-1 flex-col rounded-sm border border-ink/10 bg-paper-alt/78 backdrop-blur-[2px]">
             <DeficitForceGraph
               data={deficitNetwork}
