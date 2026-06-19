@@ -80,6 +80,30 @@
   }
 }
 
+/* ── Compact mode for ≤1440×900 logical (e.g. 2880×1800 @2x) ───────────── */
+/* Height-driven: when viewport is short, tighten vertical rhythm */
+@media (max-height: 950px) {
+  .compact-h {
+    /* section titles */
+    --sec-title: 11px;
+    --sec-sub: 8px;
+  }
+  .compact-h .compact-py {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+  .compact-h .compact-p {
+    padding: 0.375rem;
+  }
+}
+/* Width-driven: when viewport is narrow (< 1500px), shrink side panels */
+@media (max-width: 1500px) {
+  .compact-w {
+    --side-left: clamp(240px, 28%, 340px);
+    --side-right: clamp(280px, 32%, 400px);
+  }
+}
+
 /* Tooltip / shadcn baseline */
 [data-radix-popper-content-wrapper] {
   z-index: 60;

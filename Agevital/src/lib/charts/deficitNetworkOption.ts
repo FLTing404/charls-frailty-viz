@@ -1,4 +1,4 @@
-import type { EChartsCoreOption } from 'echarts/core'
+﻿import type { EChartsCoreOption } from 'echarts/core'
 import type { DeficitNetworkPayload } from '@/types/data'
 import { inkWash } from '@/lib/theme/inkWash'
 import { formatNumber, formatPercent } from '@/lib/utils'
@@ -43,7 +43,7 @@ export function buildDeficitNetworkOption(data: DeficitNetworkPayload): EChartsC
     },
     label: {
       show: n.n >= maxN * 0.08,
-      fontSize: 11,
+      fontSize: 8,
       fontFamily: '"Noto Serif SC", serif',
       color: inkWash.ink,
       fontWeight: 400,
@@ -85,7 +85,7 @@ export function buildDeficitNetworkOption(data: DeficitNetworkPayload): EChartsC
       textStyle: {
         color: inkWash.ink,
         fontFamily: '"Noto Serif SC", serif',
-        fontSize: 11,
+        fontSize: 8,
       },
       formatter: (p: any) => {
         if (p.dataType === 'edge') {
@@ -115,7 +115,7 @@ export function buildDeficitNetworkOption(data: DeficitNetworkPayload): EChartsC
       left: 'center',
       itemWidth: 12,
       itemHeight: 12,
-      textStyle: { fontSize: 11, color: inkWash.wash, fontFamily: '"Noto Serif SC", serif' },
+      textStyle: { fontSize: 8, color: inkWash.wash, fontFamily: '"Noto Serif SC", serif' },
       data: categories.map((c) => c.name),
     },
     series: [

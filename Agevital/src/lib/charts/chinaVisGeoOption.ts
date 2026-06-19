@@ -1,4 +1,4 @@
-import type { EChartsCoreOption } from 'echarts/core'
+﻿import type { EChartsCoreOption } from 'echarts/core'
 import type { ProvinceDatum } from '@/types/data'
 import { FRAIL_RATE_COLOR_DOMAIN } from '@/lib/charts/frailRateDomain'
 import { provinceToGeoName } from '@/lib/geo/provinceGeoNames'
@@ -263,7 +263,7 @@ export function buildChinaVisGeoOption(
           borderColor: inkWash.mist,
           borderWidth: 1,
           padding: [6, 10],
-          textStyle: { color: inkWash.ink, fontSize: 11, fontFamily: '"Noto Serif SC", serif' },
+          textStyle: { color: inkWash.ink, fontSize: 10, fontFamily: '"Noto Serif SC", serif' },
           formatter: (params: any) => {
             const d = params.data
             if (!d?.provinceEn) return params.name

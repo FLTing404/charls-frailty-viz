@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { DriverSankeyChart } from '@/components/trajectories/DriverSankeyChart'
 import { DriverScatterBubble } from '@/components/trajectories/DriverScatterBubble'
 import { DriverChordChart } from '@/components/trajectories/DriverChordChart'
@@ -23,7 +23,7 @@ function ToggleBar({ options, active, onChange }: ToggleProps) {
           type="button"
           onClick={() => onChange(opt.key)}
           className={cn(
-            'flex-1 px-2 py-0.5 text-[10px] transition-colors rounded-[1px]',
+            'flex-1 px-1.5 py-0.5 text-[9px] transition-colors rounded-[1px]',
             active === opt.key
               ? 'bg-cinnabar/10 text-cinnabar-deep font-medium'
               : 'text-ink-wash hover:text-ink',

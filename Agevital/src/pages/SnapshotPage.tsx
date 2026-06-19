@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { TopBar } from '@/components/snapshot/TopBar'
 import { SnapshotGeoStage } from '@/components/snapshot/SnapshotGeoStage'
@@ -49,7 +49,7 @@ export function SnapshotPage() {
   return (
     <PageShell
       title={
-        <h1 className="font-serif text-lg font-semibold tracking-wide text-ink">
+        <h1 className="font-serif text-xs font-semibold tracking-wide text-ink">
           衰弱空间分布 · {year}
         </h1>
       }

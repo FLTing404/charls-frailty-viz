@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+﻿import { useEffect, useMemo, useRef } from 'react'
 import * as echarts from 'echarts/core'
 import { HeatmapChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
@@ -54,8 +54,7 @@ export function CorrelationHeatmap({
         splitArea: { show: true },
         axisLabel: {
           color: inkWash.wash,
-          fontSize: 9,
-          fontFamily: '"Noto Serif SC", serif',
+          fontSize: 8, fontFamily: '"Noto Serif SC", serif',
           rotate: 30,
         },
         axisLine: { show: false },
@@ -67,8 +66,7 @@ export function CorrelationHeatmap({
         splitArea: { show: true },
         axisLabel: {
           color: inkWash.wash,
-          fontSize: 9,
-          fontFamily: '"Noto Serif SC", serif',
+          fontSize: 8, fontFamily: '"Noto Serif SC", serif',
         },
         axisLine: { show: false },
         axisTick: { show: false },

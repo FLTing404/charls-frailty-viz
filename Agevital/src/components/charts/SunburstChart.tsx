@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+﻿import { useEffect, useMemo, useRef } from 'react'
 import * as echarts from 'echarts/core'
 import { SunburstChart as ECSunburst } from 'echarts/charts'
 import { TooltipComponent } from 'echarts/components'
@@ -119,7 +119,7 @@ function buildOption(records: DriverRecord[]) {
       borderColor: inkWash.mist,
       borderWidth: 1,
       padding: [4, 8],
-      textStyle: { color: inkWash.ink, fontSize: 11, fontFamily: '"Noto Serif SC", serif' },
+      textStyle: { color: inkWash.ink, fontSize: 10, fontFamily: '"Noto Serif SC", serif' },
       formatter: (params: any) => {
         const pct = formatPercent(params.value / total, 1)
         return `${params.name}　${params.value.toLocaleString()}人 (${pct})`
@@ -134,14 +134,14 @@ function buildOption(records: DriverRecord[]) {
         emphasis: { focus: 'ancestor' },
         label: {
           fontFamily: '"Noto Serif SC", serif',
-          fontSize: 9,
+          fontSize: 7,
           color: inkWash.ink,
           minAngle: 8,
         },
         itemStyle: { borderWidth: 1, borderColor: 'rgba(250,246,238,0.6)' },
         levels: [
           {},
-          { r0: '15%', r: '40%', label: { align: 'right', fontSize: 10, fontWeight: 600 } },
+          { r0: '15%', r: '40%', label: { align: 'right', fontSize: 9, fontWeight: 600 } },
           { r0: '40%', r: '65%', label: { align: 'right', fontSize: 9 } },
           { r0: '65%', r: '90%', label: { position: 'outside', padding: 2, fontSize: 8 } },
         ],

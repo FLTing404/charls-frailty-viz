@@ -22,14 +22,14 @@ function renderMarkdown(text: string): string {
   // Bold **...**
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-ink">$1</strong>')
   // Inline code `...`
-  html = html.replace(/`([^`]+)`/g, '<code class="text-[10px] bg-ink/8 px-0.5 rounded font-mono">$1</code>')
-  // Numbered lines: "1. xxx" or "1) xxx" at start of line
-  html = html.replace(/^(\d+)[.)]\s+(.+)$/gm, '<div class="flex gap-1.5 mt-0.5"><span class="text-ink/40 font-mono text-[10px] shrink-0">$1.</span><span>$2</span></div>')
-  // Bullet lines: "- xxx" or "· xxx" at start of line
-  html = html.replace(/^[-·]\s+(.+)$/gm, '<div class="flex gap-1.5 mt-0.5"><span class="text-ink/30 shrink-0">·</span><span>$1</span></div>')
+  html = html.replace(/`([^`]+)`/g, '<code class="text-[9px] bg-ink/8 px-0.5 rounded font-mono">$1</code>')
+  // Numbered lines
+  html = html.replace(/^(\d+)[.)]\s+(.+)$/gm, '<div class="flex gap-1 mt-0.5"><span class="text-ink/40 font-mono text-[9px] shrink-0">$1.</span><span>$2</span></div>')
+  // Bullet lines
+  html = html.replace(/^[-·]\s+(.+)$/gm, '<div class="flex gap-1 mt-0.5"><span class="text-ink/30 shrink-0">·</span><span>$1</span></div>')
   // Double newline → paragraph break
-  html = html.replace(/\n\n/g, '<div class="h-1.5"></div>')
-  // Single newline → <br> (but not inside tags)
+  html = html.replace(/\n\n/g, '<div class="h-1"></div>')
+  // Single newline → <br>
   html = html.replace(/\n(?!\s*<)/g, '<br/>')
   return html
 }
@@ -87,32 +87,32 @@ function buildAnalysisInput(year: Wave, prevYear: Wave, anomalies: AnomalySnapsh
 
 function Bar({ pct, tone }: { pct: number; tone: 'frail' | 'preFrail' | 'urban' }) {
   const c = tone === 'frail' ? 'bg-cinnabar' : tone === 'preFrail' ? 'bg-amber_ink' : 'bg-indigo_ink'
-  return <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink/8"><div className={`h-full rounded-full transition-all duration-700 ${c}`} style={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }} /></div>
+  return <div className="h-1 w-full overflow-hidden rounded-full bg-ink/8"><div className={`h-full rounded-full transition-all duration-700 ${c}`} style={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }} /></div>
 }
 function GenderBar({ malePct }: { malePct: number }) {
-  const mc = Math.round((malePct / 100) * 20)
-  return <div className="flex flex-wrap gap-0.5 leading-none">{Array.from({ length: mc }, (_, i) => <span key={`m-${i}`} className="text-[13px] font-black text-indigo_ink">♂</span>)}{Array.from({ length: 20 - mc }, (_, i) => <span key={`f-${i}`} className="text-[13px] font-black text-ink/20">♀</span>)}</div>
+  const mc = Math.round((malePct / 100) * 16)
+  return <div className="flex flex-wrap gap-0.5 leading-none">{Array.from({ length: mc }, (_, i) => <span key={`m-${i}`} className="text-[10px] font-black text-indigo_ink">♂</span>)}{Array.from({ length: 16 - mc }, (_, i) => <span key={`f-${i}`} className="text-[10px] font-black text-ink/20">♀</span>)}</div>
 }
 function StatsBlock({ frailRate, malePct, urbanPct, n, totalN }: { frailRate: number; malePct: number | null; urbanPct: number | null; n: number; totalN?: number }) {
-  return <div className="space-y-2">
-    <div><div className="mb-0.5 flex items-center justify-between"><span className="text-[9px] text-ink-stone">衰弱率</span><span className="font-serif text-[11px] tabular-nums text-ink">{formatPercent(frailRate, 1)}</span></div><Bar pct={frailRate * 100} tone="frail" /></div>
-    <div className="border-t border-ink/5 pt-1.5"><div className="flex items-center justify-between"><span className="text-[9px] text-ink-stone">样本量</span><span className="font-serif text-[11px] tabular-nums text-ink">{totalN != null ? `${n.toLocaleString()} / ${totalN.toLocaleString()} 人` : `${n.toLocaleString()} 人`}</span></div></div>
-    <div><div className="mb-0.5 flex items-center justify-between"><span className="text-[9px] text-ink-stone">男性比</span><span className="font-serif text-[11px] tabular-nums text-ink">{malePct != null ? formatPercent(malePct, 1) : '—'}</span></div>{malePct != null && <GenderBar malePct={malePct * 100} />}</div>
-    <div><div className="mb-0.5 flex items-center justify-between"><span className="text-[9px] text-ink-stone">城镇比</span><span className="font-serif text-[11px] tabular-nums text-ink">{urbanPct != null ? formatPercent(urbanPct, 1) : '—'}</span></div>{urbanPct != null && <Bar pct={urbanPct * 100} tone="urban" />}</div>
+  return <div className="space-y-0.5">
+    <div><div className="mb-0 flex items-center justify-between"><span className="text-[7px] text-ink-stone">衰弱率</span><span className="font-serif text-[9px] tabular-nums text-ink">{formatPercent(frailRate, 1)}</span></div><Bar pct={frailRate * 100} tone="frail" /></div>
+    <div className="border-t border-ink/5 pt-0.5"><div className="flex items-center justify-between"><span className="text-[7px] text-ink-stone">样本量</span><span className="font-serif text-[9px] tabular-nums text-ink">{totalN != null ? `${n.toLocaleString()} / ${totalN.toLocaleString()} 人` : `${n.toLocaleString()} 人`}</span></div></div>
+    <div><div className="flex items-center justify-between"><span className="text-[7px] text-ink-stone">男性比</span><span className="font-serif text-[9px] tabular-nums text-ink">{malePct != null ? formatPercent(malePct, 1) : '—'}</span></div>{malePct != null && <GenderBar malePct={malePct * 100} />}</div>
+    <div><div className="flex items-center justify-between"><span className="text-[7px] text-ink-stone">城镇比</span><span className="font-serif text-[9px] tabular-nums text-ink">{urbanPct != null ? formatPercent(urbanPct, 1) : '—'}</span></div>{urbanPct != null && <Bar pct={urbanPct * 100} tone="urban" />}</div>
   </div>
 }
 
 function DeltaBadge({ value, unit }: { value: number; unit?: string }) {
   const abs = Math.abs(value); const sign = value > 0 ? '+' : value < 0 ? '−' : ''; const cls = abs < 0.3 ? 'text-ink-stone' : value > 0 ? 'text-cinnabar' : 'text-bamboo'
-  return <span className={`font-mono text-[10px] tabular-nums font-medium ${cls}`}>{sign}{abs.toFixed(1)}{unit ?? ''}</span>
+  return <span className={`font-mono text-[9px] tabular-nums font-medium ${cls}`}>{sign}{abs.toFixed(1)}{unit ?? ''}</span>
 }
 
 function FrailtyChangeCard({ anomaly, prevYear, cnLabel }: { anomaly: ProvinceChange; prevYear: Wave; cnLabel: string }) {
-  return <div className="rounded-[2px] border border-ink/10 bg-paper-alt/60 p-1.5">
-    <div className="flex items-center justify-between"><span className="text-[9px] text-ink-stone">{cnLabel}变化</span><span className="text-[8px] text-ink-stone/60">vs {prevYear}</span></div>
+  return <div className="rounded-[2px] border border-ink/10 bg-paper-alt/60 p-1">
+    <div className="flex items-center justify-between"><span className="text-[7px] text-ink-stone">{cnLabel}变化</span><span className="text-[6px] text-ink-stone/60">vs {prevYear}</span></div>
     <div className="mt-0.5 flex items-baseline gap-1">
       <DeltaBadge value={anomaly.frailDelta} unit=" pp" />
-      <span className="text-[9px] text-ink-stone">
+      <span className="text-[7px] text-ink-stone">
         {Math.abs(anomaly.frailDelta) < 0.3 ? '基本持平' : anomaly.frailDelta > 0 ? `上升 ${anomaly.frailDelta.toFixed(1)} 个百分点` : `下降 ${Math.abs(anomaly.frailDelta).toFixed(1)} 个百分点`}
       </span>
     </div>
@@ -123,14 +123,14 @@ function FrailtyChangeCard({ anomaly, prevYear, cnLabel }: { anomaly: ProvinceCh
 
 function ProvincePill({ change, tone }: { change: ProvinceChange; tone: 'rise' | 'drop' }) {
   const bg = tone === 'rise' ? 'bg-cinnabar/6 border-cinnabar/20' : 'bg-bamboo/6 border-bamboo/20'
-  return <div className={`flex items-center justify-between rounded-[2px] border px-2 py-1 ${bg}`}><div className="flex items-center gap-1.5 min-w-0"><span className="font-serif text-[10px] text-ink truncate">{tProvince(change.province)}</span><DeltaBadge value={change.frailDelta} unit=" pp" /></div>{Math.abs(change.preFrailDelta) > 0.5 && <span className="text-[8px] text-ink-stone/50 ml-1 shrink-0">前{change.preFrailDelta > 0 ? '+' : ''}{change.preFrailDelta.toFixed(0)}pp</span>}</div>
+  return <div className={`flex items-center justify-between rounded-[2px] border px-1.5 py-0.5 ${bg}`}><div className="flex items-center gap-1 min-w-0"><span className="font-serif text-[8px] text-ink truncate">{tProvince(change.province)}</span><DeltaBadge value={change.frailDelta} unit=" pp" /></div>{Math.abs(change.preFrailDelta) > 0.5 && <span className="text-[7px] text-ink-stone/50 ml-1 shrink-0">前{change.preFrailDelta > 0 ? '+' : ''}{change.preFrailDelta.toFixed(0)}pp</span>}</div>
 }
 
 function DiscoveryPanel({ insights, anomalies, selectedProvince }: { insights: AIAnalysisResult | null; anomalies: AnomalySnapshot; selectedProvince: string | null }) {
   const { topFrailRise, topFrailDrop, selected, selectedIsUnusual, selectedSigma } = anomalies
-  return <div className="space-y-2">
-    {!selectedProvince ? <>{topFrailRise[0] && <div><p className="mb-0.5 text-[8px] tracking-wide text-cinnabar/70">衰弱率上升最快</p><ProvincePill change={topFrailRise[0]} tone="rise" /></div>}{topFrailDrop[0] && <div><p className="mb-0.5 text-[8px] tracking-wide text-bamboo/70">衰弱率下降最快</p><ProvincePill change={topFrailDrop[0]} tone="drop" /></div>}</> : selected ? <div><p className="mb-0.5 text-[8px] tracking-wide text-ink-stone">{selectedIsUnusual ? '⚠ 异常省份' : '省份变化'}</p><div className={`rounded-[2px] border px-2 py-1.5 ${selectedIsUnusual ? 'border-cinnabar/30 bg-cinnabar/5' : 'border-ink/10 bg-paper-alt/40'}`}><div className="flex items-center justify-between"><span className="font-serif text-[10px] font-medium text-ink">{tProvince(selectedProvince)}</span><DeltaBadge value={selected.frailDelta} unit=" pp" /></div><p className="mt-0.5 text-[8px] leading-relaxed text-ink-stone">{selectedIsUnusual ? `偏离全国均值 ${Math.abs(selectedSigma).toFixed(1)}σ，值得关注` : '变化处于全国正常波动范围'}{Math.abs(selected.meanFIDelta) > 0.005 && <span className="ml-1 text-ink-stone/50">FI {selected.meanFIDelta > 0 ? '+' : ''}{selected.meanFIDelta.toFixed(3)}</span>}</p></div></div> : null}
-    {insights && <><div className="rounded-[2px] border border-indigo_ink/20 bg-indigo_ink/4 px-2 py-1.5"><p className="mb-0.5 text-[8px] tracking-wide text-indigo_ink font-medium">驱动因素假说</p><div className="text-[8px] leading-relaxed text-ink-stone discover-text" dangerouslySetInnerHTML={{ __html: renderMarkdown(insights.driverHypothesis) }} /></div><div className="rounded-[2px] border border-ink/10 bg-paper-alt/40 px-1.5 py-1"><div className="text-[8px] leading-relaxed text-ink-stone discover-text"><span className="font-medium text-ink">下一步：</span><span dangerouslySetInnerHTML={{ __html: renderMarkdown(insights.attention) }} /></div></div><div className="text-[8px] leading-relaxed text-ink-stone/80 border-t border-ink/5 pt-1.5 discover-text" dangerouslySetInnerHTML={{ __html: renderMarkdown(insights.nationalOverview) }} /></>}
+  return <div className="space-y-1">
+    {!selectedProvince ? <>{topFrailRise[0] && <div><p className="mb-0.5 text-[7px] tracking-wide text-cinnabar/70">衰弱率上升最快</p><ProvincePill change={topFrailRise[0]} tone="rise" /></div>}{topFrailDrop[0] && <div><p className="mb-0.5 text-[7px] tracking-wide text-bamboo/70">衰弱率下降最快</p><ProvincePill change={topFrailDrop[0]} tone="drop" /></div>}</> : selected ? <div><p className="mb-0.5 text-[7px] tracking-wide text-ink-stone">{selectedIsUnusual ? '⚠ 异常省份' : '省份变化'}</p><div className={`rounded-[2px] border px-1.5 py-1 ${selectedIsUnusual ? 'border-cinnabar/30 bg-cinnabar/5' : 'border-ink/10 bg-paper-alt/40'}`}><div className="flex items-center justify-between"><span className="font-serif text-[8px] font-medium text-ink">{tProvince(selectedProvince)}</span><DeltaBadge value={selected.frailDelta} unit=" pp" /></div><p className="mt-0.5 text-[7px] leading-snug text-ink-stone">{selectedIsUnusual ? `偏离全国均值 ${Math.abs(selectedSigma).toFixed(1)}σ，值得关注` : '变化处于全国正常波动范围'}{Math.abs(selected.meanFIDelta) > 0.005 && <span className="ml-1 text-ink-stone/50">FI {selected.meanFIDelta > 0 ? '+' : ''}{selected.meanFIDelta.toFixed(3)}</span>}</p></div></div> : null}
+    {insights && <><div className="rounded-[2px] border border-indigo_ink/20 bg-indigo_ink/4 px-1.5 py-1"><p className="mb-0.5 text-[7px] tracking-wide text-indigo_ink font-medium">驱动因素假说</p><div className="text-[7px] leading-snug text-ink-stone discover-text" dangerouslySetInnerHTML={{ __html: renderMarkdown(insights.driverHypothesis) }} /></div><div className="rounded-[2px] border border-ink/10 bg-paper-alt/40 px-1 py-0.5"><div className="text-[7px] leading-snug text-ink-stone discover-text"><span className="font-medium text-ink">下一步：</span><span dangerouslySetInnerHTML={{ __html: renderMarkdown(insights.attention) }} /></div></div><div className="text-[7px] leading-snug text-ink-stone/80 border-t border-ink/5 pt-1 discover-text" dangerouslySetInnerHTML={{ __html: renderMarkdown(insights.nationalOverview) }} /></>}
   </div>
 }
 
@@ -146,7 +146,6 @@ function ChatPanel({ context, onHeightChange }: { context: ChatContext; onHeight
 
   const suggestions = useMemo(() => getQuickSuggestions(context), [context])
 
-  // Auto-scroll
   useEffect(() => { if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight }, [messages, loading])
 
   const handleSend = useCallback(async (text: string) => {
@@ -170,38 +169,35 @@ function ChatPanel({ context, onHeightChange }: { context: ChatContext; onHeight
   }
 
   return (
-    <div className="flex h-full flex-col gap-2">
-      {/* Messages */}
-      <div ref={listRef} className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
+    <div className="flex h-full flex-col gap-1">
+      <div ref={listRef} className="min-h-0 flex-1 space-y-0.5 overflow-y-auto">
         {messages.length === 0 && (
-          <div className="space-y-1">
-            <p className="text-[8px] text-ink-stone/60">快速提问：</p>
+          <div className="space-y-0.5">
+            <p className="text-[7px] text-ink-stone/60">快速提问：</p>
             {suggestions.map((s, i) => (
               <button key={i} type="button" onClick={() => handleSend(s)} disabled={loading}
-                className="block w-full text-left rounded-[2px] border border-ink/10 bg-paper-alt/40 px-1.5 py-1 text-[9px] text-ink-stone hover:border-cinnabar/30 hover:bg-cinnabar/4 transition-colors"
+                className="block w-full text-left rounded-[2px] border border-ink/10 bg-paper-alt/40 px-1 py-0.5 text-[8px] text-ink-stone hover:border-cinnabar/30 hover:bg-cinnabar/4 transition-colors"
               >{s}</button>
             ))}
           </div>
         )}
         {messages.map((m, i) => (
           <div key={i}
-            className={cn('rounded-[2px] px-2 py-1 max-w-[95%] text-[9px] leading-relaxed text-ink-stone chat-msg', m.role === 'user' ? 'ml-auto border border-cinnabar/20 bg-cinnabar/5' : 'border border-ink/10 bg-paper-alt/60')}
+            className={cn('rounded-[2px] px-1.5 py-0.5 max-w-[95%] text-[8px] leading-snug text-ink-stone chat-msg', m.role === 'user' ? 'ml-auto border border-cinnabar/20 bg-cinnabar/5' : 'border border-ink/10 bg-paper-alt/60')}
             dangerouslySetInnerHTML={{ __html: m.role === 'agent' ? renderMarkdown(m.content) : m.content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br/>') }}
           />
         ))}
-        {loading && <div className="rounded-[2px] border border-ink/5 bg-paper-alt/40 px-2 py-1 max-w-[95%]"><p className="text-[8px] text-ink-stone/50 animate-pulse">分析中…</p></div>}
-        {error && <p className="text-[8px] text-cinnabar/60 px-1">{error}</p>}
+        {loading && <div className="rounded-[2px] border border-ink/5 bg-paper-alt/40 px-1.5 py-0.5 max-w-[95%]"><p className="text-[7px] text-ink-stone/50 animate-pulse">分析中…</p></div>}
+        {error && <p className="text-[7px] text-cinnabar/60 px-1">{error}</p>}
       </div>
-
-      {/* Input */}
       <div className="flex gap-1 shrink-0">
         <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
-          placeholder="询问数据、文献或分析建议…" rows={2}
+          placeholder="询问数据、文献或分析建议…" rows={1}
           disabled={loading}
-          className="min-w-0 flex-1 resize-none rounded-[2px] border border-ink/15 bg-paper-alt px-2 py-1 text-[10px] text-ink placeholder:text-ink-stone/40 focus:border-cinnabar/40 focus:outline-none disabled:opacity-50"
+          className="min-w-0 flex-1 resize-none rounded-[2px] border border-ink/15 bg-paper-alt px-1 py-0.5 text-[9px] text-ink placeholder:text-ink-stone/40 focus:border-cinnabar/40 focus:outline-none disabled:opacity-50"
         />
         <button type="button" onClick={() => handleSend(input)} disabled={loading || !input.trim()}
-          className="shrink-0 self-end rounded-[2px] border border-cinnabar/30 bg-cinnabar/8 px-2 py-1 text-[9px] text-cinnabar-deep hover:bg-cinnabar/15 disabled:opacity-30 transition-colors"
+          className="shrink-0 self-end rounded-[2px] border border-cinnabar/30 bg-cinnabar/8 px-1.5 py-0.5 text-[8px] text-cinnabar-deep hover:bg-cinnabar/15 disabled:opacity-30 transition-colors"
         >发送</button>
       </div>
     </div>
@@ -221,22 +217,19 @@ function RightPanel({
   chatContext: ChatContext
 }) {
   return (
-    <div className="flex h-full flex-col gap-2">
-      {/* Tab bar */}
+    <div className="flex h-full flex-col gap-1">
       <div className="flex items-center justify-between shrink-0">
-        <span className="font-serif text-[10px] font-semibold tracking-wide text-ink">
+        <span className="font-serif text-[9px] font-semibold tracking-wide text-ink">
           {tab === 'analysis' ? '发现面板' : '智能问答'}
         </span>
         <div className="flex gap-px rounded-[2px] border border-ink/15 p-px">
           {(['analysis', 'chat'] as RightTab[]).map((t) => (
             <button key={t} type="button" onClick={() => setTab(t)}
-              className={cn('px-2 py-0.5 text-[9px] rounded-[1px] transition-colors', tab === t ? 'bg-cinnabar/10 text-cinnabar-deep font-medium' : 'text-ink-wash hover:text-ink')}
+              className={cn('px-1.5 py-0.5 text-[8px] rounded-[1px] transition-colors', tab === t ? 'bg-cinnabar/10 text-cinnabar-deep font-medium' : 'text-ink-wash hover:text-ink')}
             >{t === 'analysis' ? '分析' : '问答'}</button>
           ))}
         </div>
       </div>
-
-      {/* Content */}
       <div className="min-h-0 flex-1">
         {tab === 'analysis' ? (
           <DiscoveryPanel insights={aiResult} anomalies={anomalies} selectedProvince={selectedProvince} />
@@ -257,7 +250,6 @@ export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provi
   const prevYear = PREV_WAVE[year]
   const [tab, setTab] = useState<RightTab>('analysis')
 
-  // ── AI analysis state ─────────────────────────────────────────────────
   const [aiResult, setAiResult] = useState<AIAnalysisResult | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
@@ -279,7 +271,6 @@ export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provi
     return () => { cancelled = true }
   }, [year, prevYear, anomalies, provinces, prevProvinces, selectedProvince])
 
-  // ── Chat context ──────────────────────────────────────────────────────
   const chatContext: ChatContext = useMemo(() => {
     const pm = prevProvinces ? new Map(prevProvinces.map((p) => [p.province, p])) : new Map()
     const allChanges = prevProvinces ? computeProvinceChanges(provinces, prevProvinces) : []
@@ -303,42 +294,42 @@ export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provi
   }, [year, prevYear, provinces, prevProvinces, selectedProvince, anomalies])
 
   return (
-    <div className="flex gap-3 p-2 min-h-0 h-full overflow-hidden">
-      {/* ── Left 48% ─────────────────────────────────────────────────── */}
-      <div className="w-[48%] shrink-0 flex-col gap-3 overflow-y-auto">
+    <div className="flex gap-1.5 p-1 min-h-0 h-full overflow-hidden">
+      {/* ── Left 44% ─────────────────────────────────────────────────── */}
+      <div className="w-[44%] shrink-0 flex-col gap-1.5 overflow-y-auto">
         <div>
-          <p className="text-[11px] tracking-widest text-ink-stone">调查波次</p>
-          <div className="mt-2 flex flex-wrap gap-1">
+          <p className="text-[8px] tracking-widest text-ink-stone">调查波次</p>
+          <div className="mt-1 flex flex-wrap gap-0.5">
             {WAVES.map((w) => (
               <button key={w} type="button" onClick={() => set({ year: w })}
-                className={`border px-2 py-1 text-[11px] tabular-nums transition-colors ${year === w ? 'border-cinnabar bg-cinnabar/10 text-cinnabar-deep' : 'border-ink/15 text-ink-wash hover:border-ink/30'}`}>{w}</button>
+                className={`border px-1.5 py-0.5 text-[9px] tabular-nums transition-colors ${year === w ? 'border-cinnabar bg-cinnabar/10 text-cinnabar-deep' : 'border-ink/15 text-ink-wash hover:border-ink/30'}`}>{w}</button>
             ))}
           </div>
         </div>
         {anomalies && prevYear && (
-          <div className="mt-3 border-t border-ink/10 pt-2">
+          <div className="mt-1.5 border-t border-ink/10 pt-1">
             <FrailtyChangeCard anomaly={anomalies.selected ?? anomalies.national} prevYear={prevYear} cnLabel={selectedProvince ? tProvince(selectedProvince) : '全国'} />
           </div>
         )}
-        <div className="mt-3 border-t border-ink/10 pt-2">
+        <div className="mt-1.5 border-t border-ink/10 pt-1">
           {sel ? (
-            <><p className="mb-1.5 font-serif text-[11px] font-semibold text-ink">{tProvince(sel.province)}</p><StatsBlock frailRate={sel.frailRate} malePct={sel.malePct} urbanPct={sel.urbanPct} n={sel.n} totalN={totalN} /></>
+            <><p className="mb-1 font-serif text-[9px] font-semibold text-ink">{tProvince(sel.province)}</p><StatsBlock frailRate={sel.frailRate} malePct={sel.malePct} urbanPct={sel.urbanPct} n={sel.n} totalN={totalN} /></>
           ) : provinces.length > 0 ? (() => {
             const tn = provinces.reduce((s, p) => s + p.n, 0)
             const af = provinces.reduce((s, p) => s + p.frailRate * p.n, 0) / (tn || 1)
             const mp = provinces.filter((p) => p.malePct != null)
             const up = provinces.filter((p) => p.urbanPct != null)
-            return <><p className="mb-1.5 font-serif text-[9px] tracking-widest text-ink-stone">全国</p><StatsBlock frailRate={af} malePct={mp.length ? mp.reduce((s, p) => s + p.malePct! * p.n, 0) / mp.reduce((s, p) => s + p.n, 0) : null} urbanPct={up.length ? up.reduce((s, p) => s + p.urbanPct! * p.n, 0) / up.reduce((s, p) => s + p.n, 0) : null} n={tn} /></>
-          })() : <p className="text-[9px] text-ink-stone">加载中…</p>}
+            return <><p className="mb-1 font-serif text-[7px] tracking-widest text-ink-stone">全国</p><StatsBlock frailRate={af} malePct={mp.length ? mp.reduce((s, p) => s + p.malePct! * p.n, 0) / mp.reduce((s, p) => s + p.n, 0) : null} urbanPct={up.length ? up.reduce((s, p) => s + p.urbanPct! * p.n, 0) / up.reduce((s, p) => s + p.n, 0) : null} n={tn} /></>
+          })() : <p className="text-[8px] text-ink-stone">加载中…</p>}
         </div>
       </div>
 
-      {/* ── Right 52% ────────────────────────────────────────────────── */}
-      <div className="min-w-0 flex-1 border-l border-ink/10 pl-3 overflow-y-auto min-h-0">
+      {/* ── Right 56% ────────────────────────────────────────────────── */}
+      <div className="min-w-0 flex-1 border-l border-ink/10 pl-1.5 overflow-y-auto min-h-0">
         {anomalies && prevYear ? (
           <RightPanel tab={tab} setTab={setTab} aiResult={aiResult} aiLoading={aiLoading} aiError={aiError} anomalies={anomalies} prevYear={prevYear} selectedProvince={selectedProvince} chatContext={chatContext} />
         ) : (
-          <div className="flex h-full items-center justify-center"><p className="text-[9px] text-ink-stone/50">{year === 2011 ? '首年无对比数据' : '加载中…'}</p></div>
+          <div className="flex h-full items-center justify-center"><p className="text-[8px] text-ink-stone/50">{year === 2011 ? '首年无对比数据' : '加载中…'}</p></div>
         )}
       </div>
     </div>

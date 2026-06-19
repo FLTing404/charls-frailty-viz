@@ -15,12 +15,12 @@ export function ProvinceMapPanel({
   return (
     <div className="flex h-full min-h-0 flex-col gap-1">
       <div className="flex items-baseline justify-between">
-        <span className="text-[9px] tracking-widest text-ink-stone">省份分布</span>
+        <span className="text-[8px] tracking-widest text-ink-stone">省份分布</span>
         {selectedProvince && (
           <button
             type="button"
             onClick={() => onProvinceClick(null)}
-            className="text-[9px] text-cinnabar hover:underline"
+            className="text-[8px] text-cinnabar hover:underline"
           >
             清除筛选 ×
           </button>

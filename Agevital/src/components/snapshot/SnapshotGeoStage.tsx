@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { ChinaVisGeoMap } from '@/components/charts/ChinaVisGeoMap'
 import { DeficitForceGraph } from '@/components/charts/DeficitForceGraph'
 import { ProvinceRankBar } from '@/components/charts/ProvinceRankBar'
@@ -70,9 +70,8 @@ export function SnapshotGeoStage({
 
       {/* Bubble badge — shows which deficit's city-level bubbles are active */}
       {selectedDeficit && deficitCity && (
-        <div className="pointer-events-none absolute left-[clamp(336px,35%,476px)] top-2 z-10 flex items-center gap-1.5 rounded-sm border border-cinnabar/40 bg-paper-alt/92 px-2 py-1 backdrop-blur-[2px]">
-          <span className="font-serif text-[10px] text-cinnabar">
-            城市气泡：{deficitCity.labels[selectedDeficit]}患病率
+        <div className="pointer-events-none absolute left-[clamp(212px,25%,312px)] top-2 z-10 flex items-center gap-1.5 rounded-sm border border-cinnabar/40 bg-paper-alt/92 px-2 py-1 backdrop-blur-[2px]">
+          <span className="font-serif text-[9px] text-cinnabar">城市气泡：{deficitCity.labels[selectedDeficit]}患病率
           </span>
           <button
             type="button"
@@ -86,7 +85,7 @@ export function SnapshotGeoStage({
 
       {/* Left sidebar: province ranking bar chart */}
       {provinces.length > 0 && (
-        <aside className="pointer-events-none absolute inset-y-2 left-2 z-10 flex w-[clamp(320px,34%,460px)] flex-col">
+        <aside className="pointer-events-none absolute inset-y-1 left-1 z-10 flex w-[clamp(200px,24%,300px)] flex-col">
           <div className="pointer-events-auto flex min-h-0 flex-1 flex-col rounded-sm border border-ink/10 bg-paper-alt/78 backdrop-blur-[2px]">
             <ProvinceRankBar
               key={selectedDeficit ?? 'frail'}
@@ -100,7 +99,7 @@ export function SnapshotGeoStage({
       )}
 
       {deficitNetwork && (
-        <aside className="pointer-events-none absolute inset-y-2 right-2 z-10 flex w-[clamp(380px,42%,540px)] flex-col">
+        <aside className="pointer-events-none absolute inset-y-1 right-1 z-10 flex w-[clamp(240px,28%,360px)] flex-col">
           <div className="pointer-events-auto flex min-h-0 flex-1 flex-col rounded-sm border border-ink/10 bg-paper-alt/78 backdrop-blur-[2px]">
             <DeficitForceGraph
               data={deficitNetwork}
