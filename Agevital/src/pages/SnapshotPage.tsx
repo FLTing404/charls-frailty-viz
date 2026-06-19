@@ -49,12 +49,9 @@ export function SnapshotPage() {
   return (
     <PageShell
       title={
-        <div>
-          <span className="text-[9px] tracking-widest text-cinnabar">一 · 地理格局</span>
-          <h1 className="font-serif text-lg font-semibold tracking-wide text-ink">
-            衰弱空间分布 · {year}
-          </h1>
-        </div>
+        <h1 className="font-serif text-lg font-semibold tracking-wide text-ink">
+          衰弱空间分布 · {year}
+        </h1>
       }
     >
       <div className="flex h-full min-h-0 flex-col gap-1">

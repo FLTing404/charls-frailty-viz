@@ -83,38 +83,43 @@ export function DriverScatterBubble({
     const getFiTier = (fi: number) =>
       fi >= 0.25 ? 'high' : fi <= 0.10 ? 'low' : 'mid'
 
-    // [xKey, yKey, xLabel, yLabel, yMin, yMax]
+    // [xKey, yKey, xLabel, yLabel]
     // NOTE: bubble size = FI, so neither axis should be FI
-    type AxisCandidate = [DriverDimension, DriverDimension, string, string, number | undefined, number | undefined]
+    type AxisCandidate = [DriverDimension, DriverDimension, string, string]
     const axisCandidates: AxisCandidate[] = [
-      ['depression', 'ace', '抑郁得分', 'ACE', 0, 100],
-      ['sleep', 'ace', '睡眠得分', 'ACE', 0, 100],
-      ['social', 'ace', '社交得分', 'ACE', 0, 100],
-      ['ses', 'ace', 'SES', 'ACE', 0, 100],
-      ['ace', 'depression', 'ACE', '抑郁得分', undefined, undefined],
-      ['sleep', 'depression', '睡眠得分', '抑郁得分', undefined, undefined],
-      ['social', 'depression', '社交得分', '抑郁得分', undefined, undefined],
-      ['ses', 'depression', 'SES', '抑郁得分', undefined, undefined],
+      ['depression', 'ace', '抑郁得分', 'ACE'],
+      ['sleep', 'ace', '睡眠得分', 'ACE'],
+      ['social', 'ace', '社交得分', 'ACE'],
+      ['ses', 'ace', 'SES', 'ACE'],
+      ['ace', 'depression', 'ACE', '抑郁得分'],
+      ['sleep', 'depression', '睡眠得分', '抑郁得分'],
+      ['social', 'depression', '社交得分', '抑郁得分'],
+      ['ses', 'depression', 'SES', '抑郁得分'],
     ]
 
     // If focusDimension is set and isn't FI, prepend candidates using it
-    if (focusDimension && focusDimension !== 'fi') {
+    if (focusDimension) {
       const fl = tDriverDim(focusDimension)
       axisCandidates.unshift(
-        [focusDimension, 'ace', fl, 'ACE', 0, 100],
-        [focusDimension, 'depression', fl, '抑郁得分', undefined, undefined],
+        [focusDimension, 'ace', fl, 'ACE'],
+        [focusDimension, 'depression', fl, '抑郁得分'],
       )
     }
 
     let bubbleData: any[] = []
     let activeXLabel = axisCandidates[0][2]
     let activeYLabel = axisCandidates[0][3]
-    let activeYMin: number | undefined = axisCandidates[0][4]
-    let activeYMax: number | undefined = axisCandidates[0][5]
 
-    for (const [xk, yk, xl, yl, yMin, yMax] of axisCandidates) {
+    for (const [xk, yk, xl, yl] of axisCandidates) {
       const candidates = records
-        .filter((r) => !isNaN(r[xk]) && !isNaN(r[yk]))
+        .filter((r) => {
+          const vx = Number(r[xk])
+          const vy = Number(r[yk])
+          const fi = Number(r.fi)
+          return Number.isFinite(vx) && vx >= 0.5
+            && Number.isFinite(vy) && vy >= 0.5
+            && Number.isFinite(fi) && fi >= 0.005
+        })
         .map((r) => {
           const tier = getFiTier(r.fi)
           return {
@@ -128,17 +133,24 @@ export function DriverScatterBubble({
         bubbleData = candidates
         activeXLabel = xl
         activeYLabel = yl
-        activeYMin = yMin
-        activeYMax = yMax
         break
       }
     }
 
-    // Avoid Math.max(...hugeArray) which overflows the call stack
+    // Auto-adapt Y range: min-5, max+5
+    let activeYMin = 0
+    let activeYMax = 100
     let maxFi = 0.001
-    for (let i = 0; i < bubbleData.length; i++) {
-      const fi = bubbleData[i].value[2]
-      if (fi > maxFi) maxFi = fi
+    if (bubbleData.length > 0) {
+      let yMin = Infinity, yMax = -Infinity
+      for (let i = 0; i < bubbleData.length; i++) {
+        const val = bubbleData[i].value
+        if (val[1] < yMin) yMin = val[1]
+        if (val[1] > yMax) yMax = val[1]
+        if (val[2] > maxFi) maxFi = val[2]
+      }
+      activeYMin = Math.max(0, Math.floor(yMin) - 1)
+      activeYMax = Math.ceil(yMax) + 1
     }
 
     return {
@@ -159,6 +171,8 @@ export function DriverScatterBubble({
       },
       yAxis: {
         name: activeYLabel,
+        nameLocation: 'middle',
+        nameGap: 40,
         nameTextStyle: { color: inkWash.ink, fontSize: 11, fontWeight: 'bold' },
         axisLabel: { color: inkWash.stone, fontSize: 10 },
         ...(activeYMin != null ? { min: activeYMin } : {}),
@@ -170,6 +184,22 @@ export function DriverScatterBubble({
           type: 'scatter',
           data: bubbleData,
           symbolSize: (val: number[]) => 4 + (val[2] / maxFi) * 18,
+        },
+      ],
+      graphic: [
+        {
+          type: 'group',
+          right: 12,
+          bottom: 4,
+          children: [
+            { type: 'text', right: 60, bottom: 38, style: { text: '气泡大小 = FI', fill: inkWash.stone, font: '9px "Noto Serif SC", serif' } },
+            { type: 'circle', shape: { cx: 0, cy: 0, r: 4 }, right: 76, bottom: 14, style: { fill: 'rgba(28,28,28,0.35)' } },
+            { type: 'text', right: 64, bottom: 8, style: { text: '≤0.10', fill: inkWash.stone, font: '8px sans-serif' } },
+            { type: 'circle', shape: { cx: 0, cy: 0, r: 10 }, right: 40, bottom: 8, style: { fill: 'rgba(28,28,28,0.35)' } },
+            { type: 'text', right: 28, bottom: 2, style: { text: '~0.18', fill: inkWash.stone, font: '8px sans-serif' } },
+            { type: 'circle', shape: { cx: 0, cy: 0, r: 16 }, right: 4, bottom: 2, style: { fill: 'rgba(28,28,28,0.35)' } },
+            { type: 'text', right: 0, bottom: -6, style: { text: '≥0.25', fill: inkWash.stone, font: '8px sans-serif' } },
+          ],
         },
       ],
     }

@@ -12,15 +12,21 @@ import { formatPercent } from '@/lib/utils'
 echarts.use([ECSunburst, TooltipComponent, CanvasRenderer])
 
 const FRAILTY_COLOR: Record<string, string> = {
-  robust: inkWash.bamboo,
-  'pre-frail': inkWash.amber,
-  frail: inkWash.cinnabar,
+  robust: '#9BB5A6',
+  'pre-frail': '#C4B68A',
+  frail: '#C4988E',
 }
 
 const GENDER_COLOR: Record<string, string> = {
-  male: '#7B9EB8',
-  female: '#C48B9F',
+  male: '#8C9DB5',
+  female: '#C4A2A2',
   unknown: inkWash.mist,
+}
+
+const URBAN_COLOR: Record<string, string> = {
+  城镇: '#A2B2BD',
+  农村: '#C4BAAA',
+  未知: inkWash.mist,
 }
 
 interface SunburstChartProps {
@@ -97,7 +103,7 @@ function buildOption(records: DriverRecord[]) {
                 .map(([rl, cnt]) => ({
                   name: rl,
                   value: cnt,
-                  itemStyle: { color: gdColor, opacity: 0.55 },
+                  itemStyle: { color: URBAN_COLOR[rl] ?? inkWash.mist, opacity: 0.92 },
                   label: { show: cnt / total > 0.04 },
                 })),
             }

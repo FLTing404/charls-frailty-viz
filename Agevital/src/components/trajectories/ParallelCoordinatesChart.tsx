@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+﻿import { useCallback, useEffect, useMemo, useRef } from 'react'
 import * as echarts from 'echarts/core'
 import { ParallelChart } from 'echarts/charts'
 import { ParallelComponent, TooltipComponent } from 'echarts/components'
@@ -9,6 +9,19 @@ import { ECHARTS_THEME, ensureInkWashTheme, frailtyColor, inkWash } from '@/lib/
 import { tDriverDim } from '@/lib/i18n/zh'
 
 echarts.use([ParallelChart, ParallelComponent, TooltipComponent, CanvasRenderer])
+
+/** Zero-cost typed accessor: returns NaN for missing / undefined values. */
+function dimVal(r: DriverRecord, dim: string): number {
+  const map: Record<string, number> = {
+    ace: r.ace, sleep: r.sleep, social: r.social, depression: r.depression,
+    fi: r.fi, ses: r.ses, healthcare: r.healthcare, activity: r.activity,
+    scap: r.scap, material: r.material,
+  }
+  const raw = map[dim]
+  if (raw == null) return NaN
+  const n = Number(raw)
+  return Number.isNaN(n) ? NaN : n
+}
 
 const AXIS_ORDER = ['ace', 'sleep', 'social', 'depression', 'fi', 'ses', 'healthcare', 'activity', 'scap', 'material'] as const
 const AXIS_DIMS = ['ace', 'sleep', 'social', 'depression', 'fi', 'ses', 'healthcare', 'activity', 'scap', 'material']
@@ -47,62 +60,85 @@ export function ParallelCoordinatesChart({
   const recordsRef = useRef(records)
   recordsRef.current = records
 
-  // Detect which dimensions have ANY non-zero data in the current record set.
-  // A dimension where every record is 0 (or NaN) is likely bad/missing data
-  // for this province and should be dropped from the chart entirely.
+
+  // Drop a dimension if > 70% of values in the current record set are 0 or NaN.
+  // This handles provinces where most people have no data for a given variable
+  // (e.g. Inner Mongolia ACE all 0 → axis removed).
   const visibleDims = useMemo(() => {
-    return AXIS_DIMS.filter((_, i) => {
-      return records.some((r) => {
-        const vals = [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material]
-        const v = vals[i]
-        return v != null && !Number.isNaN(v) && v !== 0
-      })
+    if (records.length === 0) return []
+    return AXIS_DIMS.filter((dim) => {
+      let zeroOrNaN = 0
+      for (const r of records) {
+        const v = dimVal(r, dim)
+        if (Number.isNaN(v) || v === 0) zeroOrNaN++
+      }
+      return zeroOrNaN < records.length
     })
   }, [records])
 
   const parallelData = useMemo(() => {
     if (visibleDims.length === 0) return []
 
-    // Build index map: AXIS_DIMS index → position in visibleDims
-    const dimToVisIdx = new Map<number, number>()
-    for (let vi = 0; vi < visibleDims.length; vi++) {
-      const origIdx = AXIS_DIMS.indexOf(visibleDims[vi])
-      dimToVisIdx.set(origIdx, vi)
-    }
-
-    // Compute per-dimension means from strictly positive (non-zero, non-NaN) values.
-    // Both NaN and 0 are treated as missing and imputed with the column mean,
-    // because 0 in survey data (e.g. ACE, sleep) almost always means "not recorded".
+    // Compute per-dimension means from valid (non-NaN, non-zero) values.
     const sums = new Array(visibleDims.length).fill(0)
     const counts = new Array(visibleDims.length).fill(0)
     for (const r of records) {
       for (let vi = 0; vi < visibleDims.length; vi++) {
-        const origIdx = AXIS_DIMS.indexOf(visibleDims[vi])
-        const vals = [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material]
-        const v = vals[origIdx]
-        if (v != null && !Number.isNaN(v) && v !== 0) {
+        const v = dimVal(r, visibleDims[vi])
+        if (!Number.isNaN(v) && Math.abs(v) > 0.0001) {
           sums[vi] += v
           counts[vi]++
         }
       }
     }
-    const means = sums.map((s, i) => (counts[i] > 0 ? s / counts[i] : 0))
+    const means = sums.map((s, i) => (counts[i] > 0 ? s / counts[i] : NaN))
 
-    return records.map((r) => {
-      const vals = [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material]
-      const imputed = visibleDims.map((_, vi) => {
-        const origIdx = AXIS_DIMS.indexOf(visibleDims[vi])
-        const v = vals[origIdx]
-        if (v != null && !Number.isNaN(v) && v !== 0) return v
-        return means[vi] // replace NaN / 0 with column mean of positive values
-      })
-      return {
+    // Build imputed records — never emit 0 for any value
+    const result: { value: number[]; id: string; frailty_cat: string }[] = []
+    for (const r of records) {
+      const imputed: number[] = []
+      for (let vi = 0; vi < visibleDims.length; vi++) {
+        const v = dimVal(r, visibleDims[vi])
+        if (!Number.isNaN(v) && Math.abs(v) > 0.0001) {
+          imputed.push(+v.toFixed(2))
+        } else {
+          // Use column mean; if mean is also NaN (no valid values in column),
+          // fall back to 1 to avoid a degenerate axis
+          const fill = !Number.isNaN(means[vi]) ? +means[vi].toFixed(2) : 1
+          imputed.push(fill)
+        }
+      }
+      result.push({
         value: imputed,
         id: r.id,
         frailty_cat: r.frailty_cat,
-      }
-    })
+      })
+    }
+    return result
   }, [records, visibleDims])
+
+  // Compute per-dimension data min/max from the imputed parallelData,
+  // falling back to the backend-supplied ranges only when they are non-degenerate
+  // (min ≠ max). This prevents axes from collapsing to 0 when the backend
+  // returns [0, 0] for a dimension whose values actually vary (e.g. social,
+  // activity, material in 2011).
+  const dataRanges = useMemo(() => {
+    const result: Record<string, [number, number]> = {}
+    for (let vi = 0; vi < visibleDims.length; vi++) {
+      const dim = visibleDims[vi]
+      let lo = Infinity
+      let hi = -Infinity
+      for (let pi = 0; pi < parallelData.length; pi++) {
+        const v = parallelData[pi].value[vi]
+        if (v < lo) lo = v
+        if (v > hi) hi = v
+      }
+      if (Number.isFinite(lo) && Number.isFinite(hi) && lo < hi) {
+        result[dim] = [lo, hi]
+      }
+    }
+    return result
+  }, [visibleDims, parallelData])
 
   const option = useMemo<echarts.EChartsCoreOption>(() => {
     const focusIdx = focusDimension ? visibleDims.indexOf(focusDimension) : -1
@@ -116,11 +152,27 @@ export function ParallelCoordinatesChart({
           return visibleDims.map((k, i) => `${tDriverDim(k)}: ${vals[i]?.toFixed?.(2) ?? vals[i]}`).join('<br/>')
         },
       },
-      parallelAxis: visibleDims.map((key, i) => ({
+      parallelAxis: visibleDims.map((key, i) => {
+        // Prefer data-computed range; use backend range only as fallback
+        // and only when non-degenerate (lo < hi)
+        const backend = ranges?.[key]
+        const fb: [number, number] | undefined =
+          backend && backend[0] < backend[1]
+            ? [backend[0], backend[1]]
+            : undefined
+        const dataRange = dataRanges[key]
+        const dataLo = dataRange?.[0]
+        const dataHi = dataRange?.[1] ?? fb?.[1] ?? 1
+        // If data spans below zero (e.g. Z-scores like SCAP), center 0.
+        // Otherwise use 0 as the axis floor.
+        const hasNeg = dataLo != null && dataLo < 0
+        const axisMax = hasNeg ? Math.max(Math.abs(dataLo!), Math.abs(dataHi)) : dataHi
+        const axisMin = hasNeg ? -axisMax : 0
+        return {
         dim: i,
         name: tDriverDim(key),
-        min: ranges?.[key]?.[0],
-        max: ranges?.[key]?.[1],
+        min: axisMin,
+        max: axisMax,
         nameTextStyle: {
           color: i === focusIdx ? inkWash.cinnabar : inkWash.wash,
           fontSize: 10,
@@ -133,17 +185,18 @@ export function ParallelCoordinatesChart({
             width: i === focusIdx ? 2 : 1,
           },
         },
-        axisLabel: { color: inkWash.stone, fontSize: 9 },
+        axisLabel: { show: false },
         areaSelectStyle: {
           width: 16,
           borderWidth: 1,
           borderColor: inkWash.cinnabar,
           color: 'rgba(184,59,59,0.12)',
         },
-      })),
+	        }
+	      }),
       parallel: {
-        left: 72,
-        right: 52,
+        left: 36,
+        right: 36,
         top: 28,
         bottom: 24,
         parallelAxisDefault: {

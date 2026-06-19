@@ -536,7 +536,7 @@ for wave in [2011, 2013, 2015, 2018]:
     recs_df['rural_int'] = recs_df['hukou'].map({'agri': 1, 'nonagri': 0})
 
     # Normalized value columns
-    recs_df['ace_val'] = pd.to_numeric(recs_df['ace'], errors='coerce').fillna(0)
+    recs_df['ace_val'] = pd.to_numeric(recs_df['ace'], errors='coerce')  # keep NaN as null — don't fillna(0)
     recs_df['sleep_val'] = pd.to_numeric(recs_df['sleep'], errors='coerce')
     recs_df['social_val'] = pd.to_numeric(recs_df['social_score'], errors='coerce').fillna(0)
     recs_df['dep_val'] = pd.to_numeric(recs_df['cesd10'], errors='coerce')
@@ -576,12 +576,12 @@ for wave in [2011, 2013, 2015, 2018]:
     for _, r in sample_df.iterrows():
         rows.append([
             str(int(r['ID'])),
-            _r(r['ace_val'], jitter=True),
+            _r(r['ace_val']),
             _r(r['sleep_val']),
             _r(r['social_val'], jitter=True),
             _r(r['dep_val'], jitter=True),
             _r(r['fi_val']),
-            _r(r['ses_val'], jitter=True),
+            _r(r['ses_val']),
             _r(r['healthcare_val'], jitter=True),
             _r(r['activity_val'], jitter=True),
             _r(r['scap_val']),

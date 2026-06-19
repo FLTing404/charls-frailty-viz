@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
+
+
 import { SectionTitle } from '@/components/layout/SectionTitle'
 import { PageShell } from '@/components/layout/PageShell'
 import { InkBorder } from '@/components/layout/InkBorder'
@@ -32,7 +32,6 @@ import type { DriverDimension } from '@/types/data'
 import type { FocusDimension } from '@/lib/store/trajectoryStore'
 
 export function TrajectoriesPage() {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { year, province, set } = useGlobalStore()
 
@@ -132,27 +131,9 @@ export function TrajectoriesPage() {
   return (
     <PageShell
       title={
-        <div className="flex min-w-0 items-center gap-4">
-          <div>
-            <span className="text-[9px] tracking-widest text-cinnabar">二 · 多维时序</span>
-            <h1 className="font-serif text-lg font-semibold tracking-wide text-ink">
-              驱动因素与衰弱关联
-            </h1>
-          </div>
-        </div>
-      }
-      actions={
-        <Button
-          variant="cinnabar"
-          size="sm"
-          onClick={() => {
-            set({ year: 2018, status: 'frail' })
-            navigate('/snapshot?year=2018&status=frail')
-          }}
-        >
-          空间分布
-          <ArrowRight className="ml-1.5 h-3 w-3" />
-        </Button>
+        <h1 className="font-serif text-lg font-semibold tracking-wide text-ink">
+          驱动因素与衰弱关联
+        </h1>
       }
     >
       {error && (
@@ -160,27 +141,6 @@ export function TrajectoriesPage() {
           {error}
         </div>
       )}
-
-      {/* Province filter badge — always reserve space to prevent layout shift */}
-      <div className="mb-1 flex h-[22px] items-center gap-2">
-        {province ? (
-          <>
-            <span className="text-[10px] text-ink-stone">当前范围：</span>
-            <span className="rounded-[2px] border border-cinnabar/40 bg-cinnabar/8 px-2 py-0.5 font-serif text-[10px] text-cinnabar-deep">
-              {province}
-            </span>
-            <button
-              type="button"
-              onClick={() => set({ province: null })}
-              className="text-[9px] text-ink-stone hover:text-cinnabar"
-            >
-              ×
-            </button>
-          </>
-        ) : (
-          <span className="text-[10px] text-ink-stone/0 select-none">占位</span>
-        )}
-      </div>
 
       {/* ── Main 3-column grid ─────────────────────────────────────────────── */}
       <div className="grid h-full min-h-0 grid-cols-12 gap-2 pb-3">

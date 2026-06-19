@@ -34,7 +34,7 @@
 
 @layer components {
   .panel {
-    @apply relative overflow-hidden rounded-sm bg-paper-alt/70 backdrop-blur-[1px] shadow-ink;
+    @apply relative overflow-hidden rounded-sm bg-paper-alt/70 backdrop-blur-[1px];
   }
 
   .panel-title {
@@ -50,7 +50,7 @@
   }
 
   .cv-panel {
-    @apply rounded-sm border border-ink/15 bg-paper-alt/90 shadow-ink backdrop-blur-[2px];
+    @apply rounded-sm border border-ink/15 bg-paper-alt/90 backdrop-blur-[2px];
   }
 
   .ink-divider {

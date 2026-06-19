@@ -2,8 +2,8 @@ import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { to: '/snapshot', label: '空间分布', kicker: '一 · 地理格局' },
-  { to: '/trajectories', label: '驱动关联', kicker: '二 · 多维时序' },
+  { to: '/snapshot', label: '空间分布' },
+  { to: '/trajectories', label: '驱动关联' },
 ]
 
 export function Header() {
@@ -37,7 +37,6 @@ export function Header() {
             >
               {({ isActive }) => (
                 <>
-                  <span className="block text-[9px] leading-none tracking-widest text-ink-stone">{item.kicker}</span>
                   <span className="font-serif text-[12px] leading-tight">{item.label}</span>
                   <span
                     className={cn(

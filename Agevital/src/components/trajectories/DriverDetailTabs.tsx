@@ -70,6 +70,8 @@ export function SankeyScatterPanel({
       <div className="min-h-0 flex-1">
         {active === 'sankey' ? (
           <DriverSankeyChart data={sankey} className="h-full" />
+        ) : records.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-[11px] text-ink-stone">暂无数据</div>
         ) : (
           <DriverScatterBubble
             records={records}
@@ -105,7 +107,9 @@ export function SunburstChordPanel({ records, chord, className }: SunburstChordP
         onChange={(k) => setActive(k as 'sunburst' | 'chord')}
       />
       <div className="min-h-0 flex-1">
-        {active === 'sunburst' ? (
+        {records.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-[11px] text-ink-stone">暂无数据</div>
+        ) : active === 'sunburst' ? (
           <SunburstChart records={records} className="h-full" />
         ) : (
           <DriverChordChart data={chord} className="h-full" />

@@ -13,11 +13,105 @@ interface WaveSelectorProps {
   provinces: ProvinceDatum[]
 }
 
-function StatRow({ label, value }: { label: string; value: string }) {
+function Bar({ pct, tone }: { pct: number; tone: 'frail' | 'preFrail' | 'urban' }) {
+  const color =
+    tone === 'frail'
+      ? 'bg-cinnabar'
+      : tone === 'preFrail'
+        ? 'bg-amber_ink'
+        : 'bg-indigo_ink'
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-[9px] text-ink-stone">{label}</span>
-      <span className="font-serif text-[11px] tabular-nums text-ink">{value}</span>
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink/8">
+      <div
+        className={`h-full rounded-full transition-all duration-700 ${color}`}
+        style={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }}
+      />
+    </div>
+  )
+}
+
+/** 50 ♂♀ icons in proportion — bold */
+function GenderBar({ malePct }: { malePct: number }) {
+  const total = 50
+  const maleCount = Math.round((malePct / 100) * total)
+  const femaleCount = total - maleCount
+  return (
+    <div className="flex flex-wrap gap-0.5 leading-none">
+      {Array.from({ length: maleCount }, (_, i) => (
+        <span key={`m-${i}`} className="text-[13px] font-black text-indigo_ink">♂</span>
+      ))}
+      {Array.from({ length: femaleCount }, (_, i) => (
+        <span key={`f-${i}`} className="text-[13px] font-black text-ink/20">♀</span>
+      ))}
+    </div>
+  )
+}
+
+interface StatsBlockProps {
+  frailRate: number
+  preFrailRate: number
+  malePct: number | null
+  urbanPct: number | null
+  n: number
+  totalN?: number
+}
+
+function StatsBlock({ frailRate, preFrailRate, malePct, urbanPct, n, totalN }: StatsBlockProps) {
+  return (
+    <div className="space-y-2.5">
+      {/* 衰弱率 */}
+      <div>
+        <div className="mb-0.5 flex items-center justify-between">
+          <span className="text-[9px] text-ink-stone">衰弱率</span>
+          <span className="font-serif text-[11px] tabular-nums text-ink">
+            {formatPercent(frailRate, 1)}
+          </span>
+        </div>
+        <Bar pct={frailRate * 100} tone="frail" />
+      </div>
+
+      {/* 衰弱前期 */}
+      <div>
+        <div className="mb-0.5 flex items-center justify-between">
+          <span className="text-[9px] text-ink-stone">衰弱前期</span>
+          <span className="font-serif text-[11px] tabular-nums text-ink">
+            {formatPercent(preFrailRate, 1)}
+          </span>
+        </div>
+        <Bar pct={preFrailRate * 100} tone="preFrail" />
+      </div>
+
+      {/* 样本量 */}
+      <div className="border-t border-ink/5 pt-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[9px] text-ink-stone">样本量</span>
+          <span className="font-serif text-[11px] tabular-nums text-ink">
+            {totalN != null ? `${n.toLocaleString()} / ${totalN.toLocaleString()} 人` : `${n.toLocaleString()} 人`}
+          </span>
+        </div>
+      </div>
+
+      {/* 男性比 — person icons */}
+      <div>
+        <div className="mb-0.5 flex items-center justify-between">
+          <span className="text-[9px] text-ink-stone">男性比</span>
+          <span className="font-serif text-[11px] tabular-nums text-ink">
+            {malePct != null ? formatPercent(malePct, 1) : '—'}
+          </span>
+        </div>
+        {malePct != null && <GenderBar malePct={malePct * 100} />}
+      </div>
+
+      {/* 城镇比 */}
+      <div>
+        <div className="mb-0.5 flex items-center justify-between">
+          <span className="text-[9px] text-ink-stone">城镇比</span>
+          <span className="font-serif text-[11px] tabular-nums text-ink">
+            {urbanPct != null ? formatPercent(urbanPct, 1) : '—'}
+          </span>
+        </div>
+        {urbanPct != null && <Bar pct={urbanPct * 100} tone="urban" />}
+      </div>
     </div>
   )
 }
@@ -25,7 +119,6 @@ function StatRow({ label, value }: { label: string; value: string }) {
 export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provinces }: WaveSelectorProps) {
   const { year, set } = useGlobalStore()
 
-  // Compute province stats
   const sel = selectedProvince
     ? provinces.find((p) => p.province === selectedProvince) ?? null
     : null
@@ -33,7 +126,7 @@ export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provi
   return (
     <div className="flex flex-col gap-3 p-2">
       <div>
-        <p className="text-[9px] tracking-widest text-ink-stone">调查波次</p>
+        <p className="text-[11px] tracking-widest text-ink-stone">调查波次</p>
         <div className="mt-2 flex flex-wrap gap-1">
           {WAVES.map((w) => (
             <button
@@ -53,31 +146,20 @@ export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provi
       </div>
 
       <div className="border-t border-ink/10 pt-2">
-        <p className="text-[9px] tracking-widest text-ink-stone">样本量</p>
-        <p className="mt-1 font-serif text-lg text-ink">{formatNumber(sampleN)}</p>
-        <p className="text-[10px] text-ink-stone">
-          {totalN !== sampleN ? `筛选后 ${formatNumber(sampleN)} / 总体 ${formatNumber(totalN)}` : `有效样本 ${formatNumber(totalN)}`}
-        </p>
-      </div>
-
-      {/* Province stats — replaces 变量说明 */}
-      <div className="border-t border-ink/10 pt-2">
         {sel ? (
-          <div className="space-y-0.5">
-            <p className="mb-1 font-serif text-[11px] font-semibold text-ink">
+          <>
+            <p className="mb-1.5 font-serif text-[11px] font-semibold text-ink">
               {tProvince(sel.province)}
             </p>
-            <StatRow label="衰弱率" value={formatPercent(sel.frailRate, 1)} />
-            <StatRow label="衰弱前期" value={formatPercent(sel.preFrailRate, 1)} />
-            <StatRow
-              label="男性比"
-              value={sel.malePct != null ? formatPercent(sel.malePct, 1) : '—'}
+            <StatsBlock
+              frailRate={sel.frailRate}
+              preFrailRate={sel.preFrailRate}
+              malePct={sel.malePct}
+              urbanPct={sel.urbanPct}
+              n={sel.n}
+              totalN={totalN}
             />
-            <StatRow
-              label="城镇比"
-              value={sel.urbanPct != null ? formatPercent(sel.urbanPct, 1) : '—'}
-            />
-          </div>
+          </>
         ) : provinces.length > 0 ? (
           (() => {
             const totalN = provinces.reduce((s, p) => s + p.n, 0)
@@ -98,19 +180,16 @@ export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provi
                   urbanProvinces.reduce((s, p) => s + p.n, 0)
                 : null
             return (
-              <div className="space-y-0.5">
-                <p className="mb-1 font-serif text-[9px] tracking-widest text-ink-stone">全国</p>
-                <StatRow label="衰弱率" value={formatPercent(avgFrail, 1)} />
-                <StatRow label="衰弱前期" value={formatPercent(avgPreFrail, 1)} />
-                <StatRow
-                  label="男性比"
-                  value={avgMale != null ? formatPercent(avgMale, 1) : '—'}
+              <>
+                <p className="mb-1.5 font-serif text-[9px] tracking-widest text-ink-stone">全国</p>
+                <StatsBlock
+                  frailRate={avgFrail}
+                  preFrailRate={avgPreFrail}
+                  malePct={avgMale}
+                  urbanPct={avgUrban}
+                  n={totalN}
                 />
-                <StatRow
-                  label="城镇比"
-                  value={avgUrban != null ? formatPercent(avgUrban, 1) : '—'}
-                />
-              </div>
+              </>
             )
           })()
         ) : (
