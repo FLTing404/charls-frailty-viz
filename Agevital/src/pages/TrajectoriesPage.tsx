@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-
-
+import type { Wave } from '@/lib/store/globalStore'
 
 import { SectionTitle } from '@/components/layout/SectionTitle'
 import { PageShell } from '@/components/layout/PageShell'
@@ -31,6 +30,90 @@ import type {
 import type { DriverDimension } from '@/types/data'
 import type { FocusDimension } from '@/lib/store/trajectoryStore'
 
+// ── Spearman correlation for dynamic heatmap ──────────────────────────────────
+
+const CORR_DIMS: DriverDimension[] = ['ace', 'sleep', 'social', 'depression', 'fi', 'ses', 'healthcare', 'activity', 'scap', 'material']
+const CORR_LABELS = ['ACE', '睡眠', '社会联系', '抑郁', 'FI', '社会经济', '医疗保健', '社交参与', '社会资本Z', '物质条件']
+
+/** Rank an array of numbers (ties get average rank). Returns a new array. */
+function rank(vals: number[]): number[] {
+  const indexed = vals.map((v, i) => ({ v, i }))
+  indexed.sort((a, b) => a.v - b.v)
+  const ranks = new Array<number>(vals.length)
+  for (let i = 0; i < indexed.length; ) {
+    const start = i
+    while (i < indexed.length && indexed[i].v === indexed[start].v) i++
+    const avg = (start + i - 1) / 2 + 0.5 // average rank of the tied group
+    for (let j = start; j < i; j++) ranks[indexed[j].i] = avg
+  }
+  return ranks
+}
+
+/** Pearson r between two same-length arrays. */
+function pearsonR(a: number[], b: number[]): number {
+  const n = a.length
+  if (n < 3) return NaN
+  let sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0
+  for (let i = 0; i < n; i++) {
+    sa += a[i]
+    sb += b[i]
+    saa += a[i] * a[i]
+    sbb += b[i] * b[i]
+    sab += a[i] * b[i]
+  }
+  const num = n * sab - sa * sb
+  const da = n * saa - sa * sa
+  const db = n * sbb - sb * sb
+  const den = Math.sqrt(da * db)
+  return den > 0 ? num / den : NaN
+}
+
+function computeCorrelationMatrix(records: DriverRecord[]): CorrelationMatrixPayload | null {
+  if (records.length < 3) return null
+  const nDims = CORR_DIMS.length
+  // Extract per-dimension arrays, skipping NaN
+  const cols: number[][] = CORR_DIMS.map((dim) => {
+    const arr: number[] = []
+    for (const r of records) {
+      const v = r[dim] as number
+      if (v != null && !Number.isNaN(v)) arr.push(v)
+    }
+    return arr
+  })
+
+  const matrix: (number | null)[][] = Array.from({ length: nDims }, () => Array<number | null>(nDims).fill(null))
+  for (let i = 0; i < nDims; i++) {
+    matrix[i][i] = 1
+    for (let j = i + 1; j < nDims; j++) {
+      // Find common non-NaN indices
+      const dimI = CORR_DIMS[i]
+      const dimJ = CORR_DIMS[j]
+      const pairs: [number, number][] = []
+      for (const r of records) {
+        const vi = r[dimI] as number
+        const vj = r[dimJ] as number
+        if (vi != null && vj != null && !Number.isNaN(vi) && !Number.isNaN(vj)) {
+          pairs.push([vi, vj])
+        }
+      }
+      if (pairs.length < 3) { matrix[i][j] = matrix[j][i] = null; continue }
+      const xs = pairs.map(p => p[0])
+      const ys = pairs.map(p => p[1])
+      const rho = pearsonR(rank(xs), rank(ys))
+      const v = Number.isNaN(rho) ? null : Math.round(rho * 10000) / 10000
+      matrix[i][j] = v
+      matrix[j][i] = v
+    }
+  }
+
+  return {
+    labels: CORR_LABELS.slice(),
+    keys: CORR_DIMS.slice(),
+    matrix: matrix as number[][],
+    n: records.length,
+  }
+}
+
 export function TrajectoriesPage() {
   const [searchParams] = useSearchParams()
   const { year, province, set } = useGlobalStore()
@@ -48,6 +131,7 @@ export function TrajectoriesPage() {
   } = useTrajectoryStore()
 
   const [provinces, setProvinces] = useState<ProvinceDatum[]>([])
+  const [prevProvinces, setPrevProvinces] = useState<ProvinceDatum[] | null>(null)
   const [correlation, setCorrelation] = useState<CorrelationMatrixPayload | null>(null)
   const [records, setRecords] = useState<DriverRecord[]>([])
   const [totalN, setTotalN] = useState(0)
@@ -58,6 +142,8 @@ export function TrajectoriesPage() {
   const [error, setError] = useState<string | null>(null)
   // Increment on year change to remount charts that need hard reset (parallel coords brush state)
   const [chartKey, setChartKey] = useState(0)
+  // Map from current wave to previous wave for anomaly detection
+  const PREV_WAVE: Partial<Record<Wave, Wave>> = { 2013: 2011, 2015: 2013, 2018: 2015 }
 
   useEffect(() => {
     let aborted = false
@@ -86,6 +172,16 @@ export function TrajectoriesPage() {
       })
       .catch((err) => { if (!aborted) setError(String(err)) })
 
+    // Load previous wave provinces for anomaly panel
+    const prev = PREV_WAVE[year]
+    if (prev) {
+      loadProvinces(prev)
+        .then((p) => { if (!aborted) setPrevProvinces(p) })
+        .catch(() => { if (!aborted) setPrevProvinces(null) })
+    } else {
+      setPrevProvinces(null) // 2011 has no prior wave
+    }
+
     return () => { aborted = true }
   }, [year, resetBrush, setTrajectory])
 
@@ -110,6 +206,12 @@ export function TrajectoriesPage() {
   const filteredRecords = useMemo(
     () => filterRecordsByIds(provinceFilteredRecords, brushedIds),
     [provinceFilteredRecords, brushedIds],
+  )
+
+  // Dynamic Spearman correlation matrix from the currently visible records
+  const provinceCorrelation = useMemo(
+    () => computeCorrelationMatrix(provinceFilteredRecords),
+    [provinceFilteredRecords],
   )
 
   const handleHeatmapClick = useCallback(
@@ -147,16 +249,17 @@ export function TrajectoriesPage() {
 
         {/* Left: Province map + wave selector */}
         <aside className="col-span-12 flex min-h-0 flex-col gap-2 lg:col-span-4">
-          <InkBorder className="panel shrink-0 p-2">
+          <InkBorder className="panel flex min-h-0 flex-col p-2" style={{ flex: 3 }}>
             <WaveSelector
               sampleN={provinceFilteredRecords.length}
               totalN={totalN}
               sampled={sampled}
               selectedProvince={province}
               provinces={provinces}
+              prevProvinces={prevProvinces}
             />
           </InkBorder>
-          <InkBorder className="panel flex min-h-0 flex-1 flex-col p-2">
+          <InkBorder className="panel flex min-h-0 flex-col p-2" style={{ flex: 7 }}>
             <SectionTitle index="L1" title="省份分布" />
             <div className="ink-divider my-1" />
             <div className="min-h-0 flex-1">
@@ -182,7 +285,7 @@ export function TrajectoriesPage() {
               <div className="ink-divider my-1" />
               <div className="min-h-0 flex-1">
                 <CorrelationHeatmap
-                  data={correlation}
+                  data={provinceCorrelation ?? correlation}
                   focusDimension={focusDimension}
                   onCellClick={handleHeatmapClick}
                   className="h-full min-h-[clamp(150px,18vh,200px)]"
