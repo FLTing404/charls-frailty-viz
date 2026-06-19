@@ -13,9 +13,9 @@ const CATEGORY_COLOR: Record<string, string> = {
 }
 
 function nodeSize(n: number, minN: number, maxN: number): number {
-  if (maxN <= minN) return 18
+  if (maxN <= minN) return 26
   const t = (Math.sqrt(n) - Math.sqrt(minN)) / (Math.sqrt(maxN) - Math.sqrt(minN) || 1)
-  return 10 + t * 28
+  return 18 + t * 42
 }
 
 function edgeWidth(value: number, maxV: number): number {
@@ -42,8 +42,8 @@ export function buildDeficitNetworkOption(data: DeficitNetworkPayload): EChartsC
       color: CATEGORY_COLOR[n.category] ?? inkWash.wash,
     },
     label: {
-      show: n.n >= maxN * 0.12,
-      fontSize: 8,
+      show: n.n >= maxN * 0.08,
+      fontSize: 11,
       fontFamily: '"Noto Serif SC", serif',
       color: inkWash.ink,
       fontWeight: 400,
@@ -113,9 +113,9 @@ export function buildDeficitNetworkOption(data: DeficitNetworkPayload): EChartsC
       orient: 'horizontal',
       bottom: 0,
       left: 'center',
-      itemWidth: 8,
-      itemHeight: 8,
-      textStyle: { fontSize: 8, color: inkWash.wash, fontFamily: '"Noto Serif SC", serif' },
+      itemWidth: 12,
+      itemHeight: 12,
+      textStyle: { fontSize: 11, color: inkWash.wash, fontFamily: '"Noto Serif SC", serif' },
       data: categories.map((c) => c.name),
     },
     series: [
@@ -144,7 +144,7 @@ export function buildDeficitNetworkOption(data: DeficitNetworkPayload): EChartsC
           },
           label: {
             show: true,
-            fontSize: 10,
+            fontSize: 13,
             fontFamily: '"Noto Serif SC", serif',
             color: inkWash.cinnabar,
             fontWeight: 700,

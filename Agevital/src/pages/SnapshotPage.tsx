@@ -50,7 +50,7 @@ export function SnapshotPage() {
     <PageShell
       title={
         <div>
-          <span className="text-[9px] tracking-widest text-cinnabar">二 · 深度洞察</span>
+          <span className="text-[9px] tracking-widest text-cinnabar">一 · 地理格局</span>
           <h1 className="font-serif text-lg font-semibold tracking-wide text-ink">
             衰弱空间分布 · {year}
           </h1>

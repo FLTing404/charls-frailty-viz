@@ -14,10 +14,10 @@ export default function App() {
         <Header />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <Routes>
-            <Route path="/" element={<Navigate to="/trajectories" replace />} />
-            <Route path="/trajectories" element={<TrajectoriesPage />} />
+            <Route path="/" element={<Navigate to="/snapshot" replace />} />
             <Route path="/snapshot" element={<SnapshotPage />} />
-            <Route path="*" element={<Navigate to="/trajectories" replace />} />
+            <Route path="/trajectories" element={<TrajectoriesPage />} />
+            <Route path="*" element={<Navigate to="/snapshot" replace />} />
           </Routes>
         </main>
       </div>

@@ -138,7 +138,7 @@ export function CorrelationHeatmap({
 
   return (
     <div className={className}>
-      <div ref={ref} style={{ width: '100%', height: '100%', minHeight: 220 }} />
+      <div ref={ref} style={{ width: '100%', height: '100%', minHeight: 'clamp(150px, 18vh, 220px)' }} />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { DriverChordChart } from '@/components/trajectories/DriverChordChart'
 import { SunburstChart } from '@/components/charts/SunburstChart'
 import type { DriverRecord, DriverSankeyPayload, DriverChordPayload } from '@/types/data'
 import type { FocusDimension } from '@/lib/store/trajectoryStore'
+import { useTrajectoryStore } from '@/lib/store/trajectoryStore'
 import { cn } from '@/lib/utils'
 
 interface ToggleProps {
@@ -50,7 +51,11 @@ export function SankeyScatterPanel({
   sankey,
   className,
 }: SankeyScatterPanelProps) {
-  const [active, setActive] = useState<'sankey' | 'bubble'>('sankey')
+  const detailTab = useTrajectoryStore((s) => s.detailTab)
+  const setTrajectory = useTrajectoryStore((s) => s.set)
+  // Only use store value if it's a Panel-1 tab; otherwise default to sankey
+  const active: 'sankey' | 'bubble' =
+    detailTab === 'bubble' ? 'bubble' : 'sankey'
 
   return (
     <div className={cn('flex flex-col gap-1', className)}>
@@ -60,7 +65,7 @@ export function SankeyScatterPanel({
           { key: 'bubble', label: '气泡图' },
         ]}
         active={active}
-        onChange={(k) => setActive(k as 'sankey' | 'bubble')}
+        onChange={(k) => setTrajectory({ detailTab: k as 'sankey' | 'bubble' })}
       />
       <div className="min-h-0 flex-1">
         {active === 'sankey' ? (

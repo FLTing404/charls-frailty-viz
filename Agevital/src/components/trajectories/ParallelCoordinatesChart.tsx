@@ -47,18 +47,42 @@ export function ParallelCoordinatesChart({
   const recordsRef = useRef(records)
   recordsRef.current = records
 
-  const parallelData = useMemo(() => {
-    // Compute per-dimension means from non-NaN values for missing-data imputation.
-    // Imputation is confined to this chart only — underlying records are unchanged.
-    const sums = new Array(AXIS_DIMS.length).fill(0)
-    const counts = new Array(AXIS_DIMS.length).fill(0)
-    for (const r of records) {
-      const vals = [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material]
-      for (let i = 0; i < vals.length; i++) {
+  // Detect which dimensions have ANY non-zero data in the current record set.
+  // A dimension where every record is 0 (or NaN) is likely bad/missing data
+  // for this province and should be dropped from the chart entirely.
+  const visibleDims = useMemo(() => {
+    return AXIS_DIMS.filter((_, i) => {
+      return records.some((r) => {
+        const vals = [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material]
         const v = vals[i]
-        if (v != null && !Number.isNaN(v)) {
-          sums[i] += v
-          counts[i]++
+        return v != null && !Number.isNaN(v) && v !== 0
+      })
+    })
+  }, [records])
+
+  const parallelData = useMemo(() => {
+    if (visibleDims.length === 0) return []
+
+    // Build index map: AXIS_DIMS index → position in visibleDims
+    const dimToVisIdx = new Map<number, number>()
+    for (let vi = 0; vi < visibleDims.length; vi++) {
+      const origIdx = AXIS_DIMS.indexOf(visibleDims[vi])
+      dimToVisIdx.set(origIdx, vi)
+    }
+
+    // Compute per-dimension means from strictly positive (non-zero, non-NaN) values.
+    // Both NaN and 0 are treated as missing and imputed with the column mean,
+    // because 0 in survey data (e.g. ACE, sleep) almost always means "not recorded".
+    const sums = new Array(visibleDims.length).fill(0)
+    const counts = new Array(visibleDims.length).fill(0)
+    for (const r of records) {
+      for (let vi = 0; vi < visibleDims.length; vi++) {
+        const origIdx = AXIS_DIMS.indexOf(visibleDims[vi])
+        const vals = [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material]
+        const v = vals[origIdx]
+        if (v != null && !Number.isNaN(v) && v !== 0) {
+          sums[vi] += v
+          counts[vi]++
         }
       }
     }
@@ -66,9 +90,11 @@ export function ParallelCoordinatesChart({
 
     return records.map((r) => {
       const vals = [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material]
-      const imputed = vals.map((v, i) => {
-        if (v != null && !Number.isNaN(v)) return v
-        return means[i] // replace missing with column mean
+      const imputed = visibleDims.map((_, vi) => {
+        const origIdx = AXIS_DIMS.indexOf(visibleDims[vi])
+        const v = vals[origIdx]
+        if (v != null && !Number.isNaN(v) && v !== 0) return v
+        return means[vi] // replace NaN / 0 with column mean of positive values
       })
       return {
         value: imputed,
@@ -76,10 +102,10 @@ export function ParallelCoordinatesChart({
         frailty_cat: r.frailty_cat,
       }
     })
-  }, [records])
+  }, [records, visibleDims])
 
   const option = useMemo<echarts.EChartsCoreOption>(() => {
-    const focusIdx = focusDimension ? AXIS_ORDER.indexOf(focusDimension) : -1
+    const focusIdx = focusDimension ? visibleDims.indexOf(focusDimension) : -1
     return {
       backgroundColor: 'transparent',
       tooltip: {
@@ -87,10 +113,10 @@ export function ParallelCoordinatesChart({
         formatter: (p: any) => {
           const d = p.data as { value: number[]; frailty_cat: string }
           const vals = d.value
-          return AXIS_DIMS.map((k, i) => `${tDriverDim(k)}: ${vals[i]?.toFixed?.(2) ?? vals[i]}`).join('<br/>')
+          return visibleDims.map((k, i) => `${tDriverDim(k)}: ${vals[i]?.toFixed?.(2) ?? vals[i]}`).join('<br/>')
         },
       },
-      parallelAxis: AXIS_DIMS.map((key, i) => ({
+      parallelAxis: visibleDims.map((key, i) => ({
         dim: i,
         name: tDriverDim(key),
         min: ranges?.[key]?.[0],
@@ -149,26 +175,39 @@ export function ParallelCoordinatesChart({
         },
       ],
     }
-  }, [parallelData, focusDimension, ranges, brushedIds.length])
+  }, [parallelData, focusDimension, ranges, brushedIds.length, visibleDims])
+
+  const visibleDimsRef = useRef(visibleDims)
+  visibleDimsRef.current = visibleDims
 
   const handleAxisAreaSelected = useCallback(
     (event: { batch?: { parallelAxisIndex: number; intervals: [number, number][] }[] }) => {
-      const intervalsByDim: ([number, number][] | undefined)[] = []
+      // visibleDimIndex → original AXIS_DIMS key
+      const curVisible = visibleDimsRef.current
+      const intervalsByOrigDim: Record<string, [number, number][] | undefined> = {}
       if (event.batch?.length) {
         for (const item of event.batch) {
-          intervalsByDim[item.parallelAxisIndex] = item.intervals
+          const dimKey = curVisible[item.parallelAxisIndex]
+          if (dimKey) {
+            intervalsByOrigDim[dimKey] = item.intervals
+          }
         }
       }
-      const hasSelection = intervalsByDim.some((a) => a && a.length > 0)
+      const hasSelection = Object.values(intervalsByOrigDim).some((a) => a && a.length > 0)
       if (!hasSelection) {
         onBrush([])
         return
       }
       const filtered = recordsRef.current.filter((r) => {
-        const vals = [r.ace, r.sleep, r.social, r.depression, r.fi, r.ses, r.healthcare, r.activity, r.scap, r.material]
-        return vals.every((v, dim) => {
-          const intervals = intervalsByDim[dim]
+        const vals: Record<string, number> = {
+          ace: r.ace, sleep: r.sleep, social: r.social, depression: r.depression,
+          fi: r.fi, ses: r.ses, healthcare: r.healthcare, activity: r.activity,
+          scap: r.scap, material: r.material,
+        }
+        return Object.entries(intervalsByOrigDim).every(([dimKey, intervals]) => {
           if (!intervals?.length) return true
+          const v = vals[dimKey]
+          if (v == null || Number.isNaN(v)) return false
           return intervals.some(([lo, hi]) => v >= lo && v <= hi)
         })
       })
@@ -204,7 +243,7 @@ export function ParallelCoordinatesChart({
 
   return (
     <div className={className}>
-      <div ref={ref} style={{ width: '100%', height: '100%', minHeight: 280 }} />
+      <div ref={ref} style={{ width: '100%', height: '100%', minHeight: 'clamp(180px, 22vh, 280px)' }} />
       {brushedIds.length > 0 && (
         <div className="mt-1 text-[10px] text-cinnabar">
           已刷选 {brushedIds.length} / {records.length} 人 · 在轴上拖拽框选，再次框选空区域可清除

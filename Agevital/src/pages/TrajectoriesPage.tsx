@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SectionTitle } from '@/components/layout/SectionTitle'
 import { PageShell } from '@/components/layout/PageShell'
@@ -91,9 +90,10 @@ export function TrajectoriesPage() {
     return () => { aborted = true }
   }, [year, resetBrush, setTrajectory])
 
-  // Reset brush when province changes
+  // Reset brush and remount chart when province changes
   useEffect(() => {
     resetBrush()
+    setChartKey((k) => k + 1)
   }, [province, resetBrush])
 
   // Province filter: from global store (set by Page 1 click or local map click)
@@ -134,15 +134,10 @@ export function TrajectoriesPage() {
       title={
         <div className="flex min-w-0 items-center gap-4">
           <div>
-            <span className="text-[9px] tracking-widest text-cinnabar">一 · 多维关联</span>
+            <span className="text-[9px] tracking-widest text-cinnabar">二 · 多维时序</span>
             <h1 className="font-serif text-lg font-semibold tracking-wide text-ink">
               驱动因素与衰弱关联
             </h1>
-          </div>
-          <div className="hidden items-center gap-2 md:flex">
-            <Badge tone="robust">健壮</Badge>
-            <Badge tone="preFrail">衰弱前期</Badge>
-            <Badge tone="frail">衰弱</Badge>
           </div>
         </div>
       }
@@ -188,7 +183,7 @@ export function TrajectoriesPage() {
       </div>
 
       {/* ── Main 3-column grid ─────────────────────────────────────────────── */}
-      <div className="grid h-full min-h-0 grid-cols-12 gap-2">
+      <div className="grid h-full min-h-0 grid-cols-12 gap-2 pb-3">
 
         {/* Left: Province map + wave selector */}
         <aside className="col-span-12 flex min-h-0 flex-col gap-2 lg:col-span-4">
@@ -217,8 +212,8 @@ export function TrajectoriesPage() {
         {/* Right: Analysis panels */}
         <section className="col-span-12 flex min-h-0 flex-col gap-2 lg:col-span-8">
 
-          {/* Row 1: Correlation heatmap + Parallel coordinates */}
-          <div className="grid min-h-0 grid-cols-12 gap-2" style={{ flex: '1 1 45%' }}>
+          {/* Row 1: Correlation heatmap + Parallel coordinates (3/5 height) */}
+          <div className="grid min-h-0 grid-cols-12 gap-2" style={{ flex: 3 }}>
             <InkBorder className="panel col-span-12 flex min-h-0 flex-col p-2 md:col-span-4">
               <SectionTitle
                 index="R1"
@@ -230,7 +225,7 @@ export function TrajectoriesPage() {
                   data={correlation}
                   focusDimension={focusDimension}
                   onCellClick={handleHeatmapClick}
-                  className="h-full min-h-[200px]"
+                  className="h-full min-h-[clamp(150px,18vh,200px)]"
                 />
               </div>
             </InkBorder>
@@ -250,7 +245,7 @@ export function TrajectoriesPage() {
                     brushedIds={brushedIds}
                     onBrush={handleBrush}
                     ranges={ranges}
-                    className="h-full min-h-[200px]"
+                    className="h-full min-h-[clamp(180px,22vh,280px)]"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-[10px] text-ink-stone">
@@ -261,25 +256,26 @@ export function TrajectoriesPage() {
             </InkBorder>
           </div>
 
-          {/* Row 2: B1 wider, B2 square */}
-          <div className="flex gap-2" style={{ flex: '0 0 420px' }}>
-            <InkBorder className="panel flex min-w-0 flex-1 flex-col p-2">
-              <SectionTitle index="B1" title="流向 · 分布" />
-              <div className="ink-divider my-1" />
-              <SankeyScatterPanel
-                records={filteredRecords}
-                focusDimension={focusDimension}
-                sankey={sankey}
-                className="min-h-0 flex-1"
-              />
-            </InkBorder>
-
-            <InkBorder className="panel flex h-full w-[380px] shrink-0 flex-col p-2">
+          {/* Row 2: B2 left, B1 right (2/5 height) */}
+          <div className="flex gap-2" style={{ flex: 2 }}>
+            <InkBorder className="panel flex h-full w-[clamp(240px,25%,380px)] shrink-0 flex-col p-2">
               <SectionTitle index="B2" title="构成 · 关联" />
               <div className="ink-divider my-1" />
               <SunburstChordPanel
                 records={filteredRecords}
                 chord={chord}
+                className="min-h-0 flex-1"
+              />
+            </InkBorder>
+
+            <InkBorder className="panel flex min-w-0 flex-1 flex-col p-2">
+              <SectionTitle index="B1" title="流向 · 分布" />
+              <div className="ink-divider my-1" />
+              <SankeyScatterPanel
+                key={`${year}-${province ?? 'all'}`}
+                records={filteredRecords}
+                focusDimension={focusDimension}
+                sankey={sankey}
                 className="min-h-0 flex-1"
               />
             </InkBorder>

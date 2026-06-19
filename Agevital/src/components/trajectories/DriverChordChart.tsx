@@ -106,7 +106,7 @@ export function DriverChordChart({ data, className }: DriverChordChartProps) {
     <svg
       ref={ref}
       className={className}
-      style={{ width: '100%', height: '100%', minHeight: 220 }}
+      style={{ width: '100%', height: '100%', minHeight: 'clamp(150px, 18vh, 220px)' }}
       role="img"
       aria-label="驱动因素共现和弦图"
     />

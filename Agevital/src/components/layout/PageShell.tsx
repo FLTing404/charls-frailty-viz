@@ -20,7 +20,7 @@ export function PageShell({ children, className, title, actions }: PageShellProp
           {actions && <div className="shrink-0">{actions}</div>}
         </div>
       )}
-      <div className="relative z-10 min-h-0 flex-1 overflow-hidden px-2 pb-2 pt-1">{children}</div>
+      <div className="relative z-10 min-h-0 flex-1 overflow-hidden px-2 pb-4 pt-1">{children}</div>
     </div>
   )
 }

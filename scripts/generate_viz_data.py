@@ -371,7 +371,7 @@ for wave in [2011, 2013, 2015, 2018]:
             'prevalence': round(n_ones / n_valid, 4) if n_valid > 0 else 0,
         })
 
-    # Co-occurrence links (phi coefficient ≥ 0.08)
+    # Co-occurrence links (phi coefficient ≥ 0.05, min co-occurrence ≥ 10)
     links = []
     for i, b1 in enumerate(actual_deficit_cols):
         for j, b2 in enumerate(actual_deficit_cols):
@@ -380,7 +380,7 @@ for wave in [2011, 2013, 2015, 2018]:
             a = deficit_arr[b1].values
             b = deficit_arr[b2].values
             both = int((a * b).sum())
-            if both < 20:
+            if both < 10:
                 continue
             n11 = both
             n10 = int(a.sum()) - both
@@ -388,7 +388,7 @@ for wave in [2011, 2013, 2015, 2018]:
             n00 = n_valid - n11 - n10 - n01
             denom = math.sqrt((n11 + n10) * (n01 + n00) * (n11 + n01) * (n10 + n00))
             phi = (n11 * n00 - n10 * n01) / denom if denom > 0 else 0
-            if phi >= 0.08:
+            if phi >= 0.05:
                 links.append({
                     'source': b1, 'target': b2,
                     'value': both,

@@ -34,7 +34,7 @@
 
 @layer components {
   .panel {
-    @apply relative overflow-hidden rounded-sm border border-border bg-paper-alt/70 backdrop-blur-[1px] shadow-ink;
+    @apply relative overflow-hidden rounded-sm bg-paper-alt/70 backdrop-blur-[1px] shadow-ink;
   }
 
   .panel-title {

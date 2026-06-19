@@ -124,13 +124,13 @@ function LegacyDriverSankey({ data, className }: DriverSankeyChartProps) {
 
   useEffect(() => {
     if (!chartRef.current) return
-    chartRef.current.setOption(option ?? {}, { notMerge: true, lazyUpdate: false })
+    chartRef.current.setOption(option ?? {}, { notMerge: true })
   }, [option])
 
   if (!data?.nodes.length) {
     return <div className={cn('flex items-center justify-center text-[10px] text-ink-stone', className)}>暂无桑基数据</div>
   }
-  return <div ref={ref} className={className} style={{ width: '100%', height: '100%', minHeight: 220 }} />
+  return <div ref={ref} className={className} style={{ width: '100%', height: '100%', minHeight: 'clamp(150px, 18vh, 220px)' }} />
 }
 
 /** New D3-based multi-wave temporal sankey */
@@ -155,7 +155,7 @@ function TemporalDriverSankey({ data, className }: DriverSankeyChartProps) {
       if (cw > 0 && ch > 0 && (cw !== lastW || ch !== lastH)) {
         lastW = cw
         lastH = ch
-        setSize({ w: Math.max(420, cw), h: Math.max(300, ch) })
+        setSize({ w: Math.max(300, cw), h: Math.max(220, ch) })
       }
     }
 
@@ -220,13 +220,14 @@ function TemporalDriverSankey({ data, className }: DriverSankeyChartProps) {
   const showEmpty = !data?.nodes.length || !layout
 
   return (
-    <div ref={containerRef} className={cn('relative h-full min-h-[240px] w-full', className)}>
+    <div ref={containerRef} className={cn('relative h-full min-h-[clamp(180px,20vh,240px)] w-full', className)}>
       {showEmpty ? (
         <div className="flex h-full items-center justify-center text-[10px] text-ink-stone">
           暂无桑基数据
         </div>
       ) : (
         <SankeySVG
+          key={data?.generated_at ?? uid}
           layout={layout!}
           w={w}
           h={h}
@@ -265,7 +266,8 @@ function SankeySVG({
 
   return (
     <>
-      <svg width={w} height={h} className="block">
+      <style>{`@keyframes sankey-in{0%{opacity:0}100%{opacity:1}}`}</style>
+      <svg width={w} height={h} className="block" style={{ animation: 'sankey-in 1200ms ease-out' }}>
         <defs>
           {links.map((link, i) => {
             const src = link.source as TSNode
@@ -326,7 +328,7 @@ function SankeySVG({
                   })
                 }}
                 onMouseLeave={() => setHover(null)}
-                style={{ transition: 'fill-opacity 200ms' }}
+                style={{ animation: `sankey-in 600ms ease-out ${i * 15}ms both`, transition: 'fill-opacity 200ms' }}
               />
             )
           })}
@@ -340,6 +342,7 @@ function SankeySVG({
             const nh = Math.max(3, (node.y1 ?? 0) - (node.y0 ?? 0))
             return (
               <g key={node.id} transform={`translate(${node.x0},${node.y0})`}
+                style={{ animation: `sankey-in 500ms ease-out ${nodes.indexOf(node) * 10}ms both` }}
                 onMouseMove={(e) => {
                   const rect = (e.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect()
                   setHover({

@@ -69,7 +69,6 @@ export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provi
             </p>
             <StatRow label="衰弱率" value={formatPercent(sel.frailRate, 1)} />
             <StatRow label="衰弱前期" value={formatPercent(sel.preFrailRate, 1)} />
-            <StatRow label="样本量" value={`${sel.n.toLocaleString()} 人`} />
             <StatRow
               label="男性比"
               value={sel.malePct != null ? formatPercent(sel.malePct, 1) : '—'}
@@ -103,7 +102,6 @@ export function WaveSelector({ sampleN, totalN, sampled, selectedProvince, provi
                 <p className="mb-1 font-serif text-[9px] tracking-widest text-ink-stone">全国</p>
                 <StatRow label="衰弱率" value={formatPercent(avgFrail, 1)} />
                 <StatRow label="衰弱前期" value={formatPercent(avgPreFrail, 1)} />
-                <StatRow label="样本量" value={`${totalN.toLocaleString()} 人`} />
                 <StatRow
                   label="男性比"
                   value={avgMale != null ? formatPercent(avgMale, 1) : '—'}
