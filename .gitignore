@@ -55,4 +55,4 @@ __pycache__/
 .venv/
 venv/
 
-/docs
+docs/
