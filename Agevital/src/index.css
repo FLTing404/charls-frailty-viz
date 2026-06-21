@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    background-image:
+      radial-gradient(rgba(28, 28, 28, 0.035) 1px, transparent 1px),
+      url('/textures/paper.svg');
+    background-size: 4px 4px, 480px 480px;
+    background-repeat: repeat;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif tracking-wide text-ink;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply relative overflow-hidden rounded-sm bg-paper-alt/70 backdrop-blur-[1px];
+  }
+
+  .panel-title {
+    @apply font-serif text-[11px] font-semibold tracking-wide text-ink-wash;
+  }
+
+  .kpi-number {
+    @apply font-serif text-[32px] font-bold leading-none text-ink;
+  }
+
+  .kpi-label {
+    @apply mt-1 text-[11px] tracking-wide text-ink-wash;
+  }
+
+  .cv-panel {
+    @apply rounded-sm border border-ink/15 bg-paper-alt/90 backdrop-blur-[2px];
+  }
+
+  .ink-divider {
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(28, 28, 28, 0.45) 12%,
+      rgba(28, 28, 28, 0.65) 50%,
+      rgba(28, 28, 28, 0.45) 88%,
+      transparent 100%
+    );
+    @apply h-px w-full;
+  }
+
+  .brush-handle {
+    @apply cursor-crosshair;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .ink-shadow-text {
+    text-shadow: 0 1px 0 rgba(247, 243, 235, 0.6);
+  }
+}
+
+/* ── Compact mode for ≤1440×900 logical (e.g. 2880×1800 @2x) ───────────── */
+/* Height-driven: when viewport is short, tighten vertical rhythm */
+@media (max-height: 950px) {
+  .compact-h {
+    /* section titles */
+    --sec-title: 11px;
+    --sec-sub: 8px;
+  }
+  .compact-h .compact-py {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+  .compact-h .compact-p {
+    padding: 0.375rem;
+  }
+}
+/* Width-driven: when viewport is narrow (< 1500px), shrink side panels */
+@media (max-width: 1500px) {
+  .compact-w {
+    --side-left: clamp(240px, 28%, 340px);
+    --side-right: clamp(280px, 32%, 400px);
+  }
+}
+
+/* Tooltip / shadcn baseline */
+[data-radix-popper-content-wrapper] {
+  z-index: 60;
+}
