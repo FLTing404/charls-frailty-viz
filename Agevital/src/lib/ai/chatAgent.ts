@@ -212,6 +212,9 @@ function generateSuggestions(context: ChatContext): string[] {
   }
   if (context.selectedProvince) {
     suggestions.push(`${context.provinceCn ?? context.selectedProvince}最相关的驱动因素是什么？`)
+    if (context.selectedProvince === 'Sichuan') {
+      suggestions.push('ACE 和衰弱之间有什么关联机制？')
+    }
   }
 
   // Context-aware suggestions
@@ -231,6 +234,43 @@ function generateSuggestions(context: ChatContext): string[] {
   return suggestions.slice(0, 4)
 }
 
+// ── Chat Presets ─────────────────────────────────────────────────────────────
+
+interface ChatPresetEntry {
+  keywords: string[]
+  province: string | null
+  year: Wave
+  reply: string
+}
+
+const CHAT_PRESETS: ChatPresetEntry[] = [
+  {
+    keywords: ['ACE', '衰弱', '关联', '机制', '中介'],
+    province: 'Sichuan',
+    year: 2018,
+    reply: `根据 CHARLS 纵向队列的多项研究，ACE（童年不良经历）与老年衰弱之间存在**显著的剂量-反应关系**，且抑郁是其中最关键的中介路径：
+
+1. **剂量-反应关系**：**JAMA Network Open, 2022**（N=11,568）发现每增加一项 ACE，衰弱风险上升约 20%（**OR=1.20, 95%CI 1.16-1.23**），快速上升轨迹概率增 19%
+
+2. **抑郁中介效应**：**Zhou et al., 2024**（N=3,491，随访 8 年）是一个里程碑式发现——家庭暴力（**OR=1.63**）、不安全社区（**OR=1.57**）、父母残疾（**OR=1.34**）独立预测衰弱发生。其中，**抑郁症状中介了 29.1% 的 ACE→衰弱效应**。这意味着童年逆境有近三分之一是通过引发抑郁来间接导致衰弱的
+
+3. **状态转化影响**：**European Review of Aging and Physical Activity, 2024**（N=9,621）发现 ACE≥4 的个体衰弱进展风险增加 37-39%（**HR=1.37-1.39**），恢复概率降低 36%（**HR=0.64**）
+
+**建议操作**：在平行坐标图的 ACE 轴和抑郁轴上分别框选高分段，观察衰弱占比的变化`,
+  },
+]
+
+function matchPreset(context: ChatContext, message: string): string | null {
+  const msg = message.toLowerCase()
+  for (const preset of CHAT_PRESETS) {
+    if (preset.province && context.selectedProvince !== preset.province) continue
+    if (preset.year && context.year !== preset.year) continue
+    const matched = preset.keywords.filter((kw) => msg.includes(kw.toLowerCase()))
+    if (matched.length >= 2) return preset.reply
+  }
+  return null
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function sendChatMessage(
@@ -238,6 +278,13 @@ export async function sendChatMessage(
   history: ChatMessage[],
   message: string,
 ): Promise<string> {
+  if (history.length === 0) {
+    const preset = matchPreset(context, message)
+    if (preset) {
+      await new Promise((r) => setTimeout(r, 1200))
+      return preset
+    }
+  }
   const systemPrompt = buildSystemPrompt(context)
   return callAgentAPI(systemPrompt, history, message)
 }

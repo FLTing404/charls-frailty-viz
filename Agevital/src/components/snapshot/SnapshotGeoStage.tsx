@@ -70,7 +70,7 @@ export function SnapshotGeoStage({
 
       {/* Bubble badge — shows which deficit's city-level bubbles are active */}
       {selectedDeficit && deficitCity && (
-        <div className="pointer-events-none absolute left-[clamp(212px,25%,312px)] top-2 z-10 flex items-center gap-1.5 rounded-sm border border-cinnabar/40 bg-paper-alt/92 px-2 py-1 backdrop-blur-[2px]">
+        <div className="pointer-events-none absolute left-[clamp(410px,49%,610px)] top-2 z-10 flex items-center gap-1.5 rounded-sm border border-cinnabar/40 bg-paper-alt/92 px-2 py-1 backdrop-blur-[2px]">
           <span className="font-serif text-[9px] text-cinnabar">城市气泡：{deficitCity.labels[selectedDeficit]}患病率
           </span>
           <button
