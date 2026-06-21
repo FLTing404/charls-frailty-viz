@@ -16,9 +16,28 @@ AgeVital 基于 CHARLS 2011–2018 四波次纵向队列数据，集成 10+ 可�
 
 ## 快速上手
 
-### 前置要求
+### 环境配置
 
-- Node.js ≥ 18
+#### Node.js
+
+- **要求版本：Node.js v22.x**（开发与构建均使用 **v22.18.0**）
+- 推荐使用 [nvm-windows](https://github.com/coreybutler/nvm-windows) 或 [nvm](https://github.com/nvm-sh/nvm) 管理版本：
+
+```bash
+nvm install 22
+nvm use 22
+node -v  # 确认输出 v22.x.x
+```
+
+- 也可直接从 [Node.js 官网](https://nodejs.org/) 下载 v22 LTS 安装包
+
+#### 包管理器
+
+- 使用 npm（随 Node.js 附带，无需额外安装）
+
+#### 操作系统
+
+- Windows / macOS / Linux 均可
 
 > 可视化数据（44 个 JSON）和地图 GeoJSON 已包含在仓库中，无需额外下载或生成。
 
@@ -26,8 +45,8 @@ AgeVital 基于 CHARLS 2011–2018 四波次纵向队列数据，集成 10+ 可�
 
 ```bash
 cd Agevital
-npm install
-npm run dev
+npm install      # 安装依赖
+npm run dev      # 启动开发服务器
 ```
 
 浏览器打开 http://localhost:5173 即可使用：
