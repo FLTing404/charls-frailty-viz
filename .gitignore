@@ -20,7 +20,7 @@ tsconfig.tsbuildinfo
 # Then run: npm run preprocess
 # ============================================================
 data/**
-!data/CHARLS_ELSA_HRS*.xlsx
+!data/.gitkeep
 
 # Stata / archives anywhere in repo
 *.dta
