@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
   const apiKey = env.DEEPSEEK_API_KEY ?? ''
 
   return {
+    base: '/charls-frailty-viz/',
     plugins: [react()],
     resolve: {
       alias: {
